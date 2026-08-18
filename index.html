@@ -7,8 +7,9 @@
   <style>
     body { background: #064e3b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; padding: 20px; color: #ecfdf5; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; box-sizing: border-box; }
     .card { background: #065f46; padding: 30px; border-radius: 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); width: 100%; max-width: 420px; border: 1px solid #047857; }
-    input { padding: 14px; font-size: 15px; border-radius: 14px; border: 1px solid #047857; margin: 10px 0; width: 100%; box-sizing: border-box; background: #047857; color: #ffffff; outline: none; }
-    input:focus { border-color: #34d399; }
+    input, select { padding: 14px; font-size: 15px; border-radius: 14px; border: 1px solid #047857; margin: 10px 0; width: 100%; box-sizing: border-box; background: #047857; color: #ffffff; outline: none; }
+    input:focus, select:focus { border-color: #34d399; }
+    select option { background: #065f46; color: #ffffff; }
     button { padding: 14px; font-size: 16px; border-radius: 14px; border: none; cursor: pointer; font-weight: 600; width: 100%; margin: 10px 0; background: #10b981; color: white; transition: background 0.2s; }
     button:hover { background: #059669; }
     .link-btn { background: #047857; text-decoration: none; display: inline-block; color: #a7f3d0; border-radius: 14px; padding: 12px; font-weight: 500; font-size: 14px; width: 100%; box-sizing: border-box; margin-bottom: 10px; border: 1px solid #059669; }
@@ -38,6 +39,13 @@
     <p style="font-size: 13px; color: #a7f3d0; margin-bottom: 12px;">Paste your Google AI Studio API Key:</p>
     <a href="https://aistudio.google.com/app/apikey" target="_blank" class="link-btn">Get Free API Key</a>
     <input type="password" id="apiKeyInput" placeholder="AIzaSy...">
+    
+    <label style="font-size: 12px; color: #a7f3d0; display: block; text-align: left; margin-top: 5px;">Select Model Version:</label>
+    <select id="modelSelect">
+      <option value="gemini-2.0-flash">Gemini 2.0 Flash (Recommended Stable)</option>
+      <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash Exp</option>
+    </select>
+
     <button onclick="saveKey()">Start Live Session</button>
   </div>
 
@@ -65,8 +73,10 @@
 
   function saveKey() {
     const key = document.getElementById('apiKeyInput').value.trim();
+    const model = document.getElementById('modelSelect').value;
     if(!key) { alert("Please paste your API key!"); return; }
     localStorage.setItem('anvaya_key', key);
+    localStorage.setItem('anvaya_model', model);
     document.getElementById('setup-screen').style.display = 'none';
     document.getElementById('app-screen').style.display = 'block';
   }
@@ -88,6 +98,7 @@
 
   async function startLiveSession() {
     const apiKey = localStorage.getItem('anvaya_key');
+    const selectedModel = localStorage.getItem('anvaya_model') || 'gemini-2.0-flash';
     if (!apiKey) return;
 
     document.getElementById('status').innerText = "Connecting...";
@@ -113,7 +124,8 @@
       return;
     }
 
-    // Using the stable production v1beta endpoint and the exact required live model identifier
+    // Using the correct model name format prefixed with 'models/' if needed, or exact model string
+    const modelPath = selectedModel.startsWith('models/') ? selectedModel : `models/${selectedModel}`;
     const url = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${apiKey}`;
     ws = new WebSocket(url);
 
@@ -125,7 +137,7 @@
       
       const setupMessage = {
         setup: {
-          model: "gemini-2.0-flash-exp",
+          model: modelPath,
           generationConfig: {
             responseModalities: ["AUDIO"],
             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } } }
@@ -171,7 +183,7 @@
     ws.onclose = (event) => {
       console.warn("WebSocket closed code:", event.code, "reason:", event.reason);
       if (event.code === 1008) {
-        document.getElementById('status').innerText = "Error 1008: Check API Key permissions or billing tier.";
+        document.getElementById('status').innerText = "Error 1008: Policy Violation. Please check if your Google AI Studio API key has permissions enabled for Live API / Gemini 2.0 models or try creating a fresh key.";
       } else {
         document.getElementById('status').innerText = event.code === 1000 ? "Ready" : `Closed by server (${event.code})`;
       }
