@@ -65,14 +65,12 @@
   let isConnected = false;
   let nextPlayTime = 0;
 
-  // Complete exhaustive list of available live / native audio model strings across versions
+  // Exact live endpoints prioritized with 3.1 Flash Live Preview leading
   const fallbackModels = [
     "models/gemini-3.1-flash-live-preview",
-    "models/gemini-live-2.5-flash-native-audio",
     "models/gemini-2.0-flash-exp",
     "models/gemini-2.0-flash",
-    "models/gemini-1.5-flash",
-    "models/gemini-1.5-pro"
+    "models/gemini-1.5-flash"
   ];
   let currentModelIndex = 0;
 
@@ -124,7 +122,7 @@
 
   async function tryConnectWithFallback() {
     if (currentModelIndex >= fallbackModels.length) {
-      document.getElementById('status').innerText = "All model variants exhausted. Please check your API key.";
+      document.getElementById('status').innerText = "Connection failed across all models.";
       stopLiveSession();
       return;
     }
@@ -138,7 +136,7 @@
       return;
     }
 
-    document.getElementById('status').innerText = `Trying (${modelToTry.replace('models/', '')})...`;
+    document.getElementById('status').innerText = `Connecting (${modelToTry.replace('models/', '')})...`;
 
     try {
       if (!audioContext || audioContext.state === 'closed') {
@@ -215,11 +213,16 @@
     };
 
     ws.onclose = (event) => {
-      if (!isConnected) {
-        console.warn(`Model ${modelToTry} rejected (Code ${event.code}). Shifting to next fallback...`);
+      // Catch error code 1007 or 1008 and fallback instantly without stopping
+      if (!isConnected && (event.code === 1007 || event.code === 1008)) {
+        console.warn(`Model ${modelToTry} rejected with code ${event.code}. Trying next model...`);
         if (ws) { ws.close(); ws = null; }
         currentModelIndex++;
-        setTimeout(tryConnectWithFallback, 250);
+        setTimeout(tryConnectWithFallback, 200);
+      } else if (!isConnected) {
+        if (ws) { ws.close(); ws = null; }
+        currentModelIndex++;
+        setTimeout(tryConnectWithFallback, 200);
       } else {
         console.warn("WebSocket closed code:", event.code);
         document.getElementById('status').innerText = event.code === 1000 ? "Ready" : `Disconnected (${event.code})`;
@@ -307,7 +310,7 @@
     const orb = document.getElementById('orbBtn');
     if (orb) orb.classList.remove('active');
     const status = document.getElementById('status');
-    if (status && (status.innerText.includes("Connected") || status.innerText.includes("Trying"))) {
+    if (status && (status.innerText.includes("Connected") || status.innerText.includes("Connecting"))) {
       status.innerText = "Ready";
     }
   }
