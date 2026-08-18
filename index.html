@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Anvaya Language Tutor by Raj Thakkar</title>
+  <title>Anvaya Live by Raj Thakkar</title>
   <style>
     body { background: #022c22; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding: 20px; color: #ecfdf5; margin: 0; }
     .card { background: #064e3b; padding: 25px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); display: inline-block; width: 100%; max-width: 450px; box-sizing: border-box; border: 1px solid #047857; }
@@ -13,56 +13,48 @@
     button:hover { background: #047857; }
     .link-btn { background: #059669; text-decoration: none; display: inline-block; color: white; border-radius: 12px; padding: 14px; font-weight: bold; width: 90%; box-sizing: border-box; margin-bottom: 10px; }
     
-    /* Green Glowing Live Orb */
-    .live-orb { width: 120px; height: 120px; background: linear-gradient(135deg, #059669, #34d399, #10b981); border-radius: 50%; margin: 25px auto; display: flex; align-items: center; justify-content: center; font-size: 45px; color: white; cursor: pointer; border: none; box-shadow: 0 0 30px rgba(52, 211, 153, 0.4); transition: transform 0.2s; }
-    .live-orb.listening { animation: livePulse 1.5s infinite; background: #047857; box-shadow: 0 0 35px rgba(52, 211, 153, 0.9); }
+    /* Glowing Live Audio Orb */
+    .live-orb { width: 130px; height: 130px; background: linear-gradient(135deg, #059669, #34d399, #10b981); border-radius: 50%; margin: 25px auto; display: flex; align-items: center; justify-content: center; font-size: 45px; color: white; cursor: pointer; border: none; box-shadow: 0 0 30px rgba(52, 211, 153, 0.4); transition: transform 0.2s; }
+    .live-orb.active { animation: livePulse 1.5s infinite; background: #047857; box-shadow: 0 0 40px rgba(52, 211, 153, 0.9); }
     @keyframes livePulse {
       0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); }
       70% { transform: scale(1.12); box-shadow: 0 0 0 25px rgba(52, 211, 153, 0); }
       100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
     }
 
-    #chat-box { height: 240px; border: 1px solid #047857; border-radius: 14px; overflow-y: auto; margin-bottom: 15px; padding: 12px; text-align: left; background: #022c22; font-size: 14px; color: #a7f3d0; }
-    
-    /* Prominent Large Branding for Raj Thakkar */
+    #chat-box { height: 220px; border: 1px solid #047857; border-radius: 14px; overflow-y: auto; margin-bottom: 15px; padding: 12px; text-align: left; background: #022c22; font-size: 14px; color: #a7f3d0; }
     .branding { font-size: 24px; font-weight: 800; color: #34d399; margin-top: 25px; letter-spacing: 1.5px; border-top: 2px solid #047857; padding-top: 15px; text-transform: uppercase; text-shadow: 0 0 20px rgba(52, 211, 153, 0.5); }
-    
     #status { font-weight: bold; color: #34d399; margin: 12px 0; font-size: 15px; }
   </style>
 </head>
 <body>
 
 <div class="card">
-  <h2>🌱 Anvaya Language Tutor 🌱</h2>
+  <h2>🌱 Anvaya Live 🌱</h2>
   
   <div id="setup-screen">
-    <p style="font-size: 14px; color: #a7f3d0;">Enter your Google API key to activate universal multi-language voice support:</p>
+    <p style="font-size: 14px; color: #a7f3d0;">Enter your Google API key for real-time Gemini Live WebSocket streaming:</p>
     <a href="https://aistudio.google.com/app/apikey" target="_blank" class="link-btn">1. Get Free Key from Google</a>
     <input type="password" id="apiKeyInput" placeholder="Paste your API key here">
-    <button onclick="saveKey()">2. Start Universal Session</button>
+    <button onclick="saveKey()">2. Connect Live Stream</button>
   </div>
 
   <div id="app-screen" style="display:none;">
-    <div id="chat-box"><div><b>System:</b> Universal voice session active. Speak in any language.</div></div>
-    <div id="status">Tap orb to speak</div>
-    <button id="orbBtn" class="live-orb" onclick="toggleListening()">🎙️</button>
+    <div id="chat-box"><div><b>System:</b> Ready. Say "Hello Anvaya" in any language.</div></div>
+    <div id="status">Tap orb to start Live session</div>
+    <button id="orbBtn" class="live-orb" onclick="toggleLiveSession()">🎙️</button>
   </div>
 
   <div class="branding">Raj Thakkar</div>
 </div>
 
 <script>
-  let recognition;
-  let isListening = false;
-  let currentRequestController = null;
-
-  // Complete multi-model fallback cascade queue
-  const MODEL_QUEUE = [
-    "gemini-3.5-flash",
-    "gemini-3.1-pro-preview",
-    "gemini-2.5-flash",
-    "gemini-2.5-pro"
-  ];
+  let ws = null;
+  let audioContext = null;
+  let mediaStream = null;
+  let processor = null;
+  let isConnected = false;
+  let nextAudioTime = 0;
 
   function saveKey() {
     const key = document.getElementById('apiKeyInput').value.trim();
@@ -73,7 +65,6 @@
     localStorage.setItem('app_key', key);
     document.getElementById('setup-screen').style.display = 'none';
     document.getElementById('app-screen').style.display = 'block';
-    initSpeechRecognition();
   }
 
   window.onload = function() {
@@ -81,132 +72,174 @@
       document.getElementById('setup-screen').style.display = 'none';
       document.getElementById('app-screen').style.display = 'block';
     }
-    initSpeechRecognition();
   }
 
-  function initSpeechRecognition() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
-
-    recognition = new SpeechRecognition();
-    recognition.lang = navigator.language || 'en-US';
-    recognition.interimResults = true;
-    recognition.continuous = false;
-
-    recognition.onresult = function(event) {
-      const transcript = event.results[0][0].transcript;
-      document.getElementById('status').innerText = "Hearing: " + transcript;
-      if (event.results[0].isFinal) {
-        sendWithModelFallback(transcript, recognition.lang);
-      }
-    };
-
-    recognition.onerror = function() {
-      stopOrb();
-      document.getElementById('status').innerText = "Tap orb to speak";
-    };
-
-    recognition.onend = function() {
-      stopOrb();
-    };
-  }
-
-  function toggleListening() {
-    window.speechSynthesis.cancel();
-    if (currentRequestController) {
-      currentRequestController.abort();
-      currentRequestController = null;
-    }
-
-    if (!recognition) {
-      alert("Speech recognition is not supported in this browser. Please use Google Chrome.");
-      return;
-    }
-
-    if (isListening) {
-      recognition.stop();
-      stopOrb();
+  async function toggleLiveSession() {
+    if (isConnected) {
+      stopLiveSession();
     } else {
-      try {
-        recognition.start();
-        startOrb();
-      } catch (e) {
-        recognition.stop();
-        stopOrb();
-      }
+      await startLiveSession();
     }
   }
 
-  function startOrb() {
-    isListening = true;
-    document.getElementById('orbBtn').classList.add('listening');
-    document.getElementById('status').innerText = "Listening actively... Speak now!";
-  }
-
-  function stopOrb() {
-    isListening = false;
-    document.getElementById('orbBtn').classList.remove('listening');
-    if (!document.getElementById('status').innerText.includes("Speaking")) {
-      document.getElementById('status').innerText = "Tap orb to speak";
-    }
-  }
-
-  async function sendWithModelFallback(text, detectedLang) {
-    const chatBox = document.getElementById('chat-box');
-    chatBox.innerHTML += `<div style="margin: 8px 0;"><b style="color: #6ee7b7;">You:</b> ${text}</div>`;
-    chatBox.scrollTop = chatBox.scrollHeight;
-    document.getElementById('status').innerText = "Anvaya is responding...";
-
+  async function startLiveSession() {
     const apiKey = localStorage.getItem('app_key');
-    currentRequestController = new AbortController();
+    if (!apiKey) return;
 
-    let reply = "";
-    let success = false;
+    document.getElementById('status').innerText = "Connecting to Gemini Live...";
+    
+    // Using Gemini 2.5 Flash native audio WebSocket endpoint for ultra-low latency real-time voice
+    const url = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${apiKey}`;
+    
+    ws = new WebSocket(url);
 
-    // Loop through all backup models automatically if one fails or hits rate limits
-    for (let i = 0; i < MODEL_QUEUE.length; i++) {
-      const modelName = MODEL_QUEUE[i];
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-
-      try {
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          signal: currentRequestController.signal,
-          body: JSON.stringify({
-            contents: [{
-              parts: [{
-                text: `You are Anvaya, a fluid multi-lingual conversational partner. Detect the language of the user's input and reply naturally in that exact same language. Keep your response concise, conversational, and direct (max 1-2 short sentences). User input: ${text}`
-              }]
-            }]
-          })
-        });
-
-        const data = await response.json();
-        
-        if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts) {
-          reply = data.candidates[0].content.parts[0].text;
-          success = true;
-          break; // Exit loop successfully once a model answers
+    ws.onopen = async () => {
+      isConnected = true;
+      document.getElementById('orbBtn').classList.add('active');
+      document.getElementById('status').innerText = "Connected! Say 'Hello Anvaya'...";
+      
+      // Send initial setup payload configuration
+      const setupMessage = {
+        setup: {
+          model: "models/gemini-2.5-flash",
+          generationConfig: {
+            responseModalities: ["AUDIO"],
+            speechConfig: {
+              voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } }
+            }
+          },
+          systemInstruction: {
+            parts: [{ text: "You are Anvaya, a real-time native multi-lingual speech companion built by Raj Thakkar. Listen to the user's spoken language, match it instantly, and respond conversationally back with natural speech." }]
+          }
         }
-      } catch (err) {
-        if (err.name === 'AbortError') return; // User cancelled/interrupted
-        // Continue to the next fallback model in the queue
+      };
+      ws.send(JSON.stringify(setupMessage));
+
+      // Start capturing microphone input audio streams (PCM 16kHz)
+      await startMicrophoneStream();
+    };
+
+    ws.onmessage = async (event) => {
+      let responseText = "";
+      try {
+        if (event.data instanceof Blob) {
+          const textData = await event.data.text();
+          handleServerMessage(JSON.parse(textData));
+        } else {
+          handleServerMessage(JSON.parse(event.data));
+        }
+      } catch (e) {
+        console.error("Parsing error", e);
+      }
+    };
+
+    ws.onerror = (err) => {
+      document.getElementById('status').innerText = "WebSocket error. Check connection.";
+      stopLiveSession();
+    };
+
+    ws.onclose = () => {
+      stopLiveSession();
+    };
+  }
+
+  async function startMicrophoneStream() {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, sampleRate: 16000 } });
+    
+    const source = audioContext.createMediaStreamSource(mediaStream);
+    processor = audioContext.createScriptProcessor(4096, 1, 1);
+
+    processor.onaudioprocess = (e) => {
+      if (!isConnected || !ws || ws.readyState !== WebSocket.OPEN) return;
+      const inputData = e.inputBuffer.getChannelData(0);
+      
+      // Convert Float32Array audio samples to PCM 16-bit Base64 format
+      const pcm16 = new Int16Array(inputData.length);
+      for (let i = 0; i < inputData.length; i++) {
+        pcm16[i] = inputData[i] * 0x7FFF;
+      }
+      const base64Audio = btoa(String.fromCharCode.apply(null, new Uint8Array(pcm16.buffer)));
+
+      const realTimeChunk = {
+        realtimeInput: {
+          mediaChunks: [{
+            mimeType: "audio/pcm",
+            data: base64Audio
+          }]
+        }
+      };
+      ws.send(JSON.stringify(realTimeChunk));
+    };
+
+    source.connect(processor);
+    processor.connect(audioContext.destination);
+  }
+
+  function handleServerMessage(response) {
+    const chatBox = document.getElementById('chat-box');
+
+    // Handle text transcription if available
+    if (response.serverContent && response.serverContent.modelTurn) {
+      const parts = response.serverContent.modelTurn.parts;
+      for (const part of parts) {
+        if (part.text) {
+          chatBox.innerHTML += `<div style="margin: 6px 0;"><b style="color: #34d399;">Anvaya:</b> ${part.text}</div>`;
+          chatBox.scrollTop = chatBox.scrollHeight;
+        }
+        // Handle incoming audio chunk playback from Gemini
+        if (part.inlineData && part.inlineData.data) {
+          playAudioChunk(part.inlineData.data);
+        }
       }
     }
 
-    if (!success || !reply) {
-      reply = "Let's keep chatting!";
+    if (response.serverContent && response.serverContent.interrupted) {
+      // User barged in / interrupted
+      document.getElementById('status').innerText = "Listening to you...";
     }
-      
-    chatBox.innerHTML += `<div style="margin: 8px 0;"><b style="color: #34d399;">Anvaya Tutor:</b> ${reply}</div>`;
-    chatBox.scrollTop = chatBox.scrollHeight;
-    document.getElementById('status').innerText = "Tap orb to speak";
+  }
+
+  function playAudioChunk(base64Audio) {
+    if (!audioContext) return;
     
-    const speech = new SpeechSynthesisUtterance(reply);
-    speech.rate = 1.0;
-    speech.lang = detectedLang;
-    window.speechSynthesis.speak(speech);
+    const binaryString = atob(base64Audio);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    const pcm16 = new Int16Array(bytes.buffer);
+    const float32 = new Float32Array(pcm16.length);
+    for (let i = 0; i < pcm16.length; i++) {
+      float32[i] = pcm16[i] / 32768.0;
+    }
+
+    const audioBuffer = audioContext.createBuffer(1, float32.length, 24000);
+    audioBuffer.getChannelData(0).set(float32);
+
+    const source = audioContext.createBufferSource();
+    source.buffer = audioBuffer;
+    source.connect(audioContext.destination);
+
+    const currentTime = audioContext.currentTime;
+    if (nextAudioTime < currentTime) {
+      nextAudioTime = currentTime;
+    }
+    source.start(nextAudioTime);
+    nextAudioTime += audioBuffer.duration;
+  }
+
+  function stopLiveSession() {
+    isConnected = false;
+    if (ws) { ws.close(); ws = null; }
+    if (processor) { processor.disconnect(); processor = null; }
+    if (mediaStream) { mediaStream.getTracks().forEach(track => track.stop()); mediaStream = null; }
+    if (audioContext) { audioContext.close(); audioContext = null; }
+
+    document.getElementById('orbBtn').classList.remove('active');
+    document.getElementById('status').innerText = "Tap orb to start Live session";
   }
 </script>
 
