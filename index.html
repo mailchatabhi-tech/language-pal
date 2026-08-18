@@ -10,15 +10,7 @@
     input { padding: 12px; font-size: 16px; border-radius: 10px; border: 2px solid #ccc; margin: 10px 0; width: 90%; box-sizing: border-box; }
     button { padding: 14px; font-size: 18px; border-radius: 12px; border: none; cursor: pointer; font-weight: bold; width: 90%; margin: 10px 0; background: #ff7f50; color: white; }
     .link-btn { background: #4285F4; text-decoration: none; display: inline-block; color: white; border-radius: 10px; padding: 12px; font-weight: bold; width: 90%; box-sizing: border-box; margin-bottom: 10px; }
-    
-    /* Big Live Audio Orb Button */
-    .mic-orb { width: 110px; height: 110px; background: #4CAF50; border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center; font-size: 45px; color: white; box-shadow: 0 0 0 rgba(76, 175, 80, 0.4); animation: pulse 2s infinite; cursor: pointer; border: none; }
-    @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
-      70% { box-shadow: 0 0 0 25px rgba(76, 175, 80, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
-    }
-
+    .mic-btn { width: 100px; height: 100px; background: #4CAF50; border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center; font-size: 40px; color: white; cursor: pointer; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
     #chat-box { height: 180px; border: 2px dashed #add8e6; border-radius: 10px; overflow-y: auto; margin-bottom: 10px; padding: 10px; text-align: left; background: #fffaf0; font-size: 14px; }
     .branding { font-size: 13px; color: #888; margin-top: 15px; }
     #status { font-weight: bold; color: #4CAF50; margin: 10px 0; font-size: 15px; }
@@ -30,7 +22,6 @@
   <h2>🌟 Language Pal 🌟</h2>
   <p style="font-size: 14px; color: #555; margin-top: -10px;">by Raj</p>
   
-  <!-- Setup Screen -->
   <div id="setup-screen">
     <p style="font-size: 14px;">Enter your email and paste your free Google API key:</p>
     <input type="email" id="parentEmail" placeholder="Parent's Email">
@@ -39,19 +30,18 @@
     <button onclick="saveKey()">2. Launch Voice App!</button>
   </div>
 
-  <!-- Main Voice Screen -->
   <div id="app-screen" style="display:none;">
     <div id="chat-box"><div><b>Tutor Pingo:</b> Tap the green button and speak clearly! 🌍</div></div>
-    <div id="status">Tap orb to speak</div>
-    
-    <!-- Tap-to-Talk Seamless Orb -->
-    <button class="mic-orb" onclick="startListening()">🎤</button>
+    <div id="status">Tap microphone to speak</div>
+    <button class="mic-btn" onclick="startListening()">🎤</button>
   </div>
 
   <div class="branding">Powered by Raj Thakkar</div>
 </div>
 
 <script>
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyTEVn6j5vqgsfWA2y4peYib5deA__cQLI2Z5KlXPeKwibwcJOz8vbLJYYkHbzcejU/exec";
+
   function saveKey() {
     const key = document.getElementById('apiKeyInput').value.trim();
     const email = document.getElementById('parentEmail').value.trim();
@@ -87,48 +77,40 @@
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
 
-    document.getElementById('status').innerText = "Listening closely... Speak now! 🎙️";
+    document.getElementById('status').innerText = "Listening... Speak now! 🎙️";
 
     recognition.onresult = async function(event) {
       const speechText = event.results[0][0].transcript;
       document.getElementById('status').innerText = "Pingo is thinking...";
-      await sendToGemini(speechText);
+      await sendToBackend(speechText);
     };
 
-    recognition.onerror = function(event) {
-      document.getElementById('status').innerText = "Tap orb to try again";
+    recognition.onerror = function() {
+      document.getElementById('status').innerText = "Tap microphone to try again";
     };
 
     recognition.onend = function() {
       if(document.getElementById('status').innerText.includes("Listening")) {
-        document.getElementById('status').innerText = "Tap orb to speak";
+        document.getElementById('status').innerText = "Tap microphone to speak";
       }
     };
 
     recognition.start();
   }
 
-  async function sendToGemini(text) {
+  async function sendToBackend(text) {
     const chatBox = document.getElementById('chat-box');
     chatBox.innerHTML += `<div><b>Child:</b> ${text}</div>`;
     chatBox.scrollTop = chatBox.scrollHeight;
 
-    const apiKey = localStorage.getItem('app_key');
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-
-    const payload = {
-      "contents": [{
-        "parts": [{
-          "text": "CRITICAL RULE: You are a warm, highly encouraging kids' language tutor mascot named Pingo. You ONLY teach languages (vocabulary, pronunciation, simple phrases). Keep sentences short and clear. If asked about anything else, politely redirect them back to learning languages. The child says: " + text
-        }]
-      }]
-    };
-
     try {
-      const response = await fetch(url, {
+      const response = await fetch(SCRIPT_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          apiKey: localStorage.getItem('app_key'),
+          email: localStorage.getItem('parent_email') || "Unknown",
+          message: text
+        })
       });
 
       const data = await response.json();
@@ -136,16 +118,15 @@
       
       chatBox.innerHTML += `<div><b>Tutor Pingo:</b> ${reply}</div>`;
       chatBox.scrollTop = chatBox.scrollHeight;
-      document.getElementById('status').innerText = "Tap orb to speak";
+      document.getElementById('status').innerText = "Tap microphone to speak";
       
-      // Clear audio speech response back out loud
       const speech = new SpeechSynthesisUtterance(reply);
       speech.rate = 0.95; 
       window.speechSynthesis.speak(speech);
 
     } catch (err) {
-      chatBox.innerHTML += `<div><b>System:</b> Check your API key or internet connection.</div>`;
-      document.getElementById('status').innerText = "Tap orb to speak";
+      chatBox.innerHTML += `<div><b>System:</b> Connection failed. Check your network.</div>`;
+      document.getElementById('status').innerText = "Tap microphone to speak";
     }
   }
 </script>
