@@ -10,32 +10,38 @@
     input { padding: 12px; font-size: 16px; border-radius: 10px; border: 2px solid #ccc; margin: 10px 0; width: 90%; box-sizing: border-box; }
     button { padding: 14px; font-size: 18px; border-radius: 12px; border: none; cursor: pointer; font-weight: bold; width: 90%; margin: 10px 0; background: #ff7f50; color: white; }
     .link-btn { background: #4285F4; text-decoration: none; display: inline-block; color: white; border-radius: 10px; padding: 12px; font-weight: bold; width: 90%; box-sizing: border-box; margin-bottom: 10px; }
-    .mic-btn { width: 100px; height: 100px; background: #4CAF50; border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center; font-size: 40px; color: white; cursor: pointer; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+    
+    /* Gemini Live Pulsing Orb Style */
+    .live-orb { width: 110px; height: 110px; background: linear-gradient(135deg, #4285F4, #9b59b6, #ff7f50); border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center; font-size: 45px; color: white; cursor: pointer; border: none; box-shadow: 0 0 20px rgba(66, 133, 244, 0.4); transition: transform 0.2s; }
+    .live-orb.listening { animation: livePulse 1.5s infinite; background: #ea4335; }
+    @keyframes livePulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(234, 67, 53, 0.6); }
+      70% { transform: scale(1.08); box-shadow: 0 0 0 20px rgba(234, 67, 53, 0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(234, 67, 53, 0); }
+    }
+
     #chat-box { height: 220px; border: 2px dashed #add8e6; border-radius: 10px; overflow-y: auto; margin-bottom: 10px; padding: 10px; text-align: left; background: #fffaf0; font-size: 14px; }
-    
-    /* Prominent Branding Style */
     .branding { font-size: 18px; font-weight: bold; color: #2c3e50; margin-top: 20px; letter-spacing: 0.5px; border-top: 2px solid #eee; padding-top: 12px; }
-    
-    #status { font-weight: bold; color: #4CAF50; margin: 10px 0; font-size: 15px; }
+    #status { font-weight: bold; color: #4285F4; margin: 10px 0; font-size: 15px; }
   </style>
 </head>
 <body>
 
 <div class="card">
-  <h2>🌍 Language Pal 🌍</h2>
+  <h2>🌍 Language Pal Live 🌍</h2>
   
   <div id="setup-screen">
     <p style="font-size: 14px;">Enter your email and paste your free Google API key:</p>
     <input type="email" id="parentEmail" placeholder="Your Email">
     <a href="https://aistudio.google.com/app/apikey" target="_blank" class="link-btn">1. Get Free Key from Google</a>
     <input type="password" id="apiKeyInput" placeholder="Paste your API key here">
-    <button onclick="saveKey()">2. Launch Tutor App!</button>
+    <button onclick="saveKey()">2. Launch Live Session!</button>
   </div>
 
   <div id="app-screen" style="display:none;">
-    <div id="chat-box"><div><b>Tutor:</b> Hello! What language would you like to practice today? Speak into the microphone.</div></div>
-    <div id="status">Tap microphone to speak</div>
-    <button class="mic-btn" onclick="startListening()">🎤</button>
+    <div id="chat-box"><div><b>Tutor:</b> Tap the glowing orb to start speaking seamlessly!</div></div>
+    <div id="status">Tap orb to speak</div>
+    <button id="orbBtn" class="live-orb" onclick="toggleListening()">🎙️</button>
   </div>
 
   <div class="branding">Created by Raj Thakkar</div>
@@ -43,6 +49,8 @@
 
 <script>
   const SCRIPT_URL = "YOUR_NEW_APPS_SCRIPT_WEB_APP_URL_HERE"; // Put your actual deployment script URL here
+  let recognition;
+  let isListening = false;
 
   function saveKey() {
     const key = document.getElementById('apiKeyInput').value.trim();
@@ -65,45 +73,79 @@
       document.getElementById('setup-screen').style.display = 'none';
       document.getElementById('app-screen').style.display = 'block';
     }
+    initSpeechRecognition();
   }
 
-  function startListening() {
+  function initSpeechRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert("Please use Google Chrome or Safari browser for voice features.");
       return;
     }
 
-    const recognition = new SpeechRecognition();
+    recognition = new SpeechRecognition();
     recognition.lang = 'en-US';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
+    recognition.interimResults = true;
+    recognition.continuous = false;
 
-    document.getElementById('status').innerText = "Listening... Speak now! 🎙️";
-
-    recognition.onresult = async function(event) {
-      const speechText = event.results[0][0].transcript;
-      document.getElementById('status').innerText = "Tutor is thinking...";
-      await sendToBackend(speechText);
-    };
-
-    recognition.onerror = function() {
-      document.getElementById('status').innerText = "Tap microphone to try again";
-    };
-
-    recognition.onend = function() {
-      if(document.getElementById('status').innerText.includes("Listening")) {
-        document.getElementById('status').innerText = "Tap microphone to speak";
+    recognition.onresult = function(event) {
+      const transcript = event.results[0][0].transcript;
+      document.getElementById('status').innerText = "Hearing: " + transcript;
+      if (event.results[0].isFinal) {
+        sendToBackend(transcript);
       }
     };
 
-    recognition.start();
+    recognition.onerror = function() {
+      stopOrb();
+      document.getElementById('status').innerText = "Tap orb to speak";
+    };
+
+    recognition.onend = function() {
+      stopOrb();
+    };
+  }
+
+  function toggleListening() {
+    if (!recognition) {
+      alert("Speech recognition is not supported in this browser. Please use Google Chrome.");
+      return;
+    }
+
+    if (isListening) {
+      recognition.stop();
+      stopOrb();
+    } else {
+      try {
+        recognition.start();
+        startOrb();
+      } catch (e) {
+        recognition.stop();
+        stopOrb();
+      }
+    }
+  }
+
+  function startOrb() {
+    isListening = true;
+    const btn = document.getElementById('orbBtn');
+    btn.classList.add('listening');
+    document.getElementById('status').innerText = "Listening actively... Speak now!";
+  }
+
+  function stopOrb() {
+    isListening = false;
+    const btn = document.getElementById('orbBtn');
+    btn.classList.remove('listening');
+    if (!document.getElementById('status').innerText.includes("Thinking")) {
+      document.getElementById('status').innerText = "Tap orb to speak";
+    }
   }
 
   async function sendToBackend(text) {
     const chatBox = document.getElementById('chat-box');
     chatBox.innerHTML += `<div><b>You:</b> ${text}</div>`;
     chatBox.scrollTop = chatBox.scrollHeight;
+    document.getElementById('status').innerText = "AI is thinking...";
 
     try {
       const response = await fetch(SCRIPT_URL, {
@@ -117,7 +159,7 @@
 
       const data = await response.json();
       
-      let reply = "Could not parse response.";
+      let reply = "";
       if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts) {
         reply = data.candidates[0].content.parts[0].text;
       } else if (data.error) {
@@ -128,15 +170,16 @@
       
       chatBox.innerHTML += `<div><b>Tutor:</b> ${reply}</div>`;
       chatBox.scrollTop = chatBox.scrollHeight;
-      document.getElementById('status').innerText = "Tap microphone to speak";
+      document.getElementById('status').innerText = "Tap orb to speak";
       
+      // Real-time voice synthesis response
       const speech = new SpeechSynthesisUtterance(reply);
-      speech.rate = 1.0; 
+      speech.rate = 1.0;
       window.speechSynthesis.speak(speech);
 
     } catch (err) {
       chatBox.innerHTML += `<div><b>System:</b> Connection failed. Check network.</div>`;
-      document.getElementById('status').innerText = "Tap microphone to speak";
+      document.getElementById('status').innerText = "Tap orb to speak";
     }
   }
 </script>
