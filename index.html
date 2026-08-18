@@ -65,8 +65,10 @@
   let isConnected = false;
   let nextPlayTime = 0;
 
-  // List of models as automatic fallbacks from best/newest to stable options
+  // Complete exhaustive list of available live / native audio model strings across versions
   const fallbackModels = [
+    "models/gemini-3.1-flash-live-preview",
+    "models/gemini-live-2.5-flash-native-audio",
     "models/gemini-2.0-flash-exp",
     "models/gemini-2.0-flash",
     "models/gemini-1.5-flash",
@@ -91,7 +93,7 @@
     if(!rawKey) { alert("Please paste your API key!"); return; }
     
     localStorage.setItem('anvaya_enc_key', encryptKey(rawKey));
-    currentModelIndex = 0; // Reset fallback list index on new key
+    currentModelIndex = 0;
     document.getElementById('setup-screen').style.display = 'none';
     document.getElementById('app-screen').style.display = 'block';
   }
@@ -115,14 +117,14 @@
     if (isConnected) {
       stopLiveSession();
     } else {
-      currentModelIndex = 0; // Start trying from the primary model
+      currentModelIndex = 0;
       await tryConnectWithFallback();
     }
   }
 
   async function tryConnectWithFallback() {
     if (currentModelIndex >= fallbackModels.length) {
-      document.getElementById('status').innerText = "All model fallbacks failed. Check API key permissions.";
+      document.getElementById('status').innerText = "All model variants exhausted. Please check your API key.";
       stopLiveSession();
       return;
     }
@@ -136,7 +138,7 @@
       return;
     }
 
-    document.getElementById('status').innerText = `Connecting (${modelToTry.replace('models/', '')})...`;
+    document.getElementById('status').innerText = `Trying (${modelToTry.replace('models/', '')})...`;
 
     try {
       if (!audioContext || audioContext.state === 'closed') {
@@ -213,16 +215,11 @@
     };
 
     ws.onclose = (event) => {
-      // If code is 1008 or connection dropped before success, trigger next fallback model automatically
-      if (!isConnected && event.code === 1008) {
-        console.warn(`Model ${modelToTry} rejected with 1008. Trying fallback...`);
+      if (!isConnected) {
+        console.warn(`Model ${modelToTry} rejected (Code ${event.code}). Shifting to next fallback...`);
         if (ws) { ws.close(); ws = null; }
         currentModelIndex++;
-        setTimeout(tryConnectWithFallback, 300); // Quick seamless shift to next model
-      } else if (!isConnected) {
-        if (ws) { ws.close(); ws = null; }
-        currentModelIndex++;
-        setTimeout(tryConnectWithFallback, 300);
+        setTimeout(tryConnectWithFallback, 250);
       } else {
         console.warn("WebSocket closed code:", event.code);
         document.getElementById('status').innerText = event.code === 1000 ? "Ready" : `Disconnected (${event.code})`;
@@ -310,7 +307,7 @@
     const orb = document.getElementById('orbBtn');
     if (orb) orb.classList.remove('active');
     const status = document.getElementById('status');
-    if (status && (status.innerText.includes("Connected") || status.innerText.includes("Connecting"))) {
+    if (status && (status.innerText.includes("Connected") || status.innerText.includes("Trying"))) {
       status.innerText = "Ready";
     }
   }
