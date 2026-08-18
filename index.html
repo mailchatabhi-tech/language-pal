@@ -12,7 +12,7 @@
     select option { background: #065f46; color: #ffffff; }
     button { padding: 14px; font-size: 16px; border-radius: 14px; border: none; cursor: pointer; font-weight: 600; width: 100%; margin: 10px 0; background: #10b981; color: white; transition: background 0.2s; }
     button:hover { background: #059669; }
-    .link-btn { background: #047857; text-decoration: none; display: inline-block; color: #a7f3d0; border-radius: 14px; padding: 12px; font-weight: 500; font-size: 14px; width: 100%; box-sizing: border-box; margin-bottom: 10px; border: 1px solid #059669; }
+    .link-btn { background: #047857; text-decoration: none; display: inline-block; color: #a7f3d0; border-radius: 14px; padding: 12px; font-weight: 500; font-size: 14px; width: 100%; box-sizing: border-box; margin-bottom: 10px; border: 1px solid #047857; }
     .link-btn:hover { color: #ffffff; background: #059669; }
 
     .live-orb { width: 120px; height: 120px; background: radial-gradient(circle, #34d399 0%, #10b981 50%, #059669 100%); border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; box-shadow: 0 0 40px rgba(52, 211, 153, 0.5); transition: transform 0.2s; position: relative; }
@@ -42,7 +42,7 @@
     
     <label style="font-size: 12px; color: #a7f3d0; display: block; text-align: left; margin-top: 5px;">Select Gemini Live Model:</label>
     <select id="modelSelect">
-      <option value="models/gemini-2.0-flash-exp">Gemini 2.0 Flash Exp (Recommended)</option>
+      <option value="models/gemini-2.0-flash-exp">Gemini 2.0 Flash Exp (Working Baseline)</option>
       <option value="models/gemini-2.0-flash">Gemini 2.0 Flash</option>
       <option value="models/gemini-1.5-flash">Gemini 1.5 Flash</option>
       <option value="models/gemini-1.5-pro">Gemini 1.5 Pro</option>
@@ -184,8 +184,8 @@
     };
 
     ws.onclose = (event) => {
-      console.warn("WebSocket closed:", event);
-      document.getElementById('status').innerText = event.code === 1000 ? "Ready" : "Connection closed by server.";
+      console.warn("WebSocket closed code:", event.code, "reason:", event.reason);
+      document.getElementById('status').innerText = event.code === 1000 ? "Ready" : `Closed by server (${event.code})`;
       stopLiveSession();
     };
   }
