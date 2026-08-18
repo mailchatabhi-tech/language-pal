@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gemini Live Replica by Raj Thakkar</title>
+  <title>Gemini 3.6 Flash Live Replica by Raj Thakkar</title>
   <style>
     body { background: #0b0f19; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding: 20px; color: #f8fafc; margin: 0; }
     .card { background: #131b2e; padding: 25px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: inline-block; width: 100%; max-width: 450px; box-sizing: border-box; border: 1px solid #1e293b; }
@@ -25,7 +25,7 @@
     #chat-box { height: 240px; border: 1px solid #1e293b; border-radius: 14px; overflow-y: auto; margin-bottom: 15px; padding: 12px; text-align: left; background: #0b0f19; font-size: 14px; color: #cbd5e1; }
     
     /* Prominent Large Branding for Raj Thakkar */
-    .branding { font-size: 22px; font-weight: 800; color: #38bdf8; margin-top: 25px; letter-spacing: 1px; border-top: 2px solid #1e293b; padding-top: 15px; text-transform: uppercase; text-shadow: 0 0 15px rgba(56, 189, 248, 0.4); }
+    .branding { font-size: 24px; font-weight: 800; color: #38bdf8; margin-top: 25px; letter-spacing: 1.5px; border-top: 2px solid #1e293b; padding-top: 15px; text-transform: uppercase; text-shadow: 0 0 20px rgba(56, 189, 248, 0.5); }
     
     #status { font-weight: bold; color: #60a5fa; margin: 12px 0; font-size: 15px; }
   </style>
@@ -33,10 +33,10 @@
 <body>
 
 <div class="card">
-  <h2>✨ Gemini Live Core ✨</h2>
+  <h2>✨ Gemini 3.6 Flash Core ✨</h2>
   
   <div id="setup-screen">
-    <p style="font-size: 14px; color: #94a3b8;">Enter your email and paste your free Google API key:</p>
+    <p style="font-size: 14px; color: #94a3b8;">Enter your email and paste your Google API key:</p>
     <input type="email" id="parentEmail" placeholder="Your Email">
     <a href="https://aistudio.google.com/app/apikey" target="_blank" class="link-btn">1. Get Free Key from Google</a>
     <input type="password" id="apiKeyInput" placeholder="Paste your API key here">
@@ -44,7 +44,7 @@
   </div>
 
   <div id="app-screen" style="display:none;">
-    <div id="chat-box"><div><b>System:</b> Live session initialized. Tap the glowing orb to speak freely.</div></div>
+    <div id="chat-box"><div><b>System:</b> Gemini 3.6 Flash session initialized. Tap the glowing orb to speak freely.</div></div>
     <div id="status">Tap orb to speak</div>
     <button id="orbBtn" class="live-orb" onclick="toggleListening()">🎙️</button>
   </div>
@@ -146,7 +146,7 @@
     const chatBox = document.getElementById('chat-box');
     chatBox.innerHTML += `<div style="margin: 8px 0;"><b style="color: #60a5fa;">You:</b> ${text}</div>`;
     chatBox.scrollTop = chatBox.scrollHeight;
-    document.getElementById('status').innerText = "Gemini is thinking...";
+    document.getElementById('status').innerText = "Gemini 3.6 Flash is thinking...";
 
     try {
       const response = await fetch(SCRIPT_URL, {
