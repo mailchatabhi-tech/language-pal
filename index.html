@@ -5,28 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Anvaya by Raj Thakkar</title>
   <style>
-    body { background: #0b0f19; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; padding: 20px; color: #f3f4f6; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; box-sizing: border-box; }
-    .card { background: #111827; padding: 30px; border-radius: 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); width: 100%; max-width: 420px; border: 1px solid #1f2937; }
-    input { padding: 14px; font-size: 15px; border-radius: 14px; border: 1px solid #374151; margin: 10px 0; width: 100%; box-sizing: border-box; background: #1f2937; color: #ffffff; outline: none; }
-    input:focus { border-color: #10b981; }
+    body { background: #064e3b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; padding: 20px; color: #ecfdf5; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; box-sizing: border-box; }
+    .card { background: #065f46; padding: 30px; border-radius: 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); width: 100%; max-width: 420px; border: 1px solid #047857; }
+    input { padding: 14px; font-size: 15px; border-radius: 14px; border: 1px solid #047857; margin: 10px 0; width: 100%; box-sizing: border-box; background: #047857; color: #ffffff; outline: none; }
+    input:focus { border-color: #34d399; }
     button { padding: 14px; font-size: 16px; border-radius: 14px; border: none; cursor: pointer; font-weight: 600; width: 100%; margin: 10px 0; background: #10b981; color: white; transition: background 0.2s; }
     button:hover { background: #059669; }
-    .link-btn { background: #1f2937; text-decoration: none; display: inline-block; color: #9ca3af; border-radius: 14px; padding: 12px; font-weight: 500; font-size: 14px; width: 100%; box-sizing: border-box; margin-bottom: 10px; border: 1px solid #374151; }
-    .link-btn:hover { color: #ffffff; background: #374151; }
+    .link-btn { background: #047857; text-decoration: none; display: inline-block; color: #a7f3d0; border-radius: 14px; padding: 12px; font-weight: 500; font-size: 14px; width: 100%; box-sizing: border-box; margin-bottom: 10px; border: 1px solid #059669; }
+    .link-btn:hover { color: #ffffff; background: #059669; }
 
-    .live-orb { width: 120px; height: 120px; background: radial-gradient(circle, #10b981 0%, #047857 50%, #065f46 100%); border-radius: 50%; margin: 30px auto; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; box-shadow: 0 0 40px rgba(16, 185, 129, 0.4); transition: transform 0.2s; position: relative; }
-    .live-orb::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; background: linear-gradient(45deg, #34d399, #10b981, #059669, #047857); z-index: -1; filter: blur(8px); opacity: 0.7; }
+    .live-orb { width: 120px; height: 120px; background: radial-gradient(circle, #34d399 0%, #10b981 50%, #059669 100%); border-radius: 50%; margin: 30px auto; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; box-shadow: 0 0 40px rgba(52, 211, 153, 0.5); transition: transform 0.2s; position: relative; }
+    .live-orb::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; background: linear-gradient(45deg, #6ee7b7, #34d399, #10b981, #059669); z-index: -1; filter: blur(8px); opacity: 0.8; }
     .live-orb.active { animation: geminiPulse 2s infinite ease-in-out; }
     @keyframes geminiPulse {
-      0% { transform: scale(1); box-shadow: 0 0 30px rgba(16, 185, 129, 0.5); }
-      50% { transform: scale(1.08); box-shadow: 0 0 60px rgba(52, 211, 153, 0.8); }
-      100% { transform: scale(1); box-shadow: 0 0 30px rgba(16, 185, 129, 0.5); }
+      0% { transform: scale(1); box-shadow: 0 0 30px rgba(52, 211, 153, 0.6); }
+      50% { transform: scale(1.08); box-shadow: 0 0 60px rgba(110, 231, 183, 0.9); }
+      100% { transform: scale(1); box-shadow: 0 0 30px rgba(52, 211, 153, 0.6); }
     }
 
-    #chat-box { height: 180px; border: 1px solid #1f2937; border-radius: 16px; overflow-y: auto; margin-bottom: 15px; padding: 14px; text-align: left; background: #0f172a; font-size: 13px; color: #94a3b8; }
-    .branding-top { font-size: 13px; font-weight: 600; color: #34d399; margin-bottom: 20px; letter-spacing: 2px; text-transform: uppercase; }
-    .branding-bottom { font-size: 12px; font-weight: 600; color: #64748b; margin-top: 25px; letter-spacing: 2px; border-top: 1px solid #1f2937; padding-top: 15px; text-transform: uppercase; }
-    #status { font-weight: 500; color: #34d399; margin: 12px 0; font-size: 14px; }
+    #chat-box { height: 180px; border: 1px solid #047857; border-radius: 16px; overflow-y: auto; margin-bottom: 15px; padding: 14px; text-align: left; background: #022c22; font-size: 13px; color: #a7f3d0; }
+    .branding-top { font-size: 13px; font-weight: 600; color: #a7f3d0; margin-bottom: 20px; letter-spacing: 2px; text-transform: uppercase; }
+    .branding-bottom { font-size: 12px; font-weight: 600; color: #6ee7b7; margin-top: 25px; letter-spacing: 2px; border-top: 1px solid #047857; padding-top: 15px; text-transform: uppercase; }
+    #status { font-weight: 500; color: #a7f3d0; margin: 12px 0; font-size: 14px; }
   </style>
 </head>
 <body>
@@ -35,14 +35,14 @@
   <div class="branding-top">Anvaya by Raj Thakkar</div>
   
   <div id="setup-screen">
-    <p style="font-size: 13px; color: #9ca3af; margin-bottom: 15px;">Paste your Google AI Studio API Key:</p>
+    <p style="font-size: 13px; color: #a7f3d0; margin-bottom: 15px;">Paste your Google AI Studio API Key:</p>
     <a href="https://aistudio.google.com/app/apikey" target="_blank" class="link-btn">Get Free API Key</a>
     <input type="password" id="apiKeyInput" placeholder="AIzaSy...">
-    <button onclick="saveKey()">Save Key & Connect</button>
+    <button onclick="saveKey()">Start Live Session</button>
   </div>
 
   <div id="app-screen" style="display:none;">
-    <div id="chat-box"><div><b style="color:#34d399;">System:</b> Tap the orb to start.</div></div>
+    <div id="chat-box"><div><b style="color:#6ee7b7;">System:</b> Tap the orb to launch live voice channel.</div></div>
     <div id="status">Ready</div>
     <button id="orbBtn" class="live-orb" onclick="toggleLiveSession()">
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -58,7 +58,8 @@
   let ws = null;
   let audioContext = null;
   let mediaStream = null;
-  let workletNode = null;
+  let processor = null;
+  let inputSource = null;
   let isConnected = false;
   let nextPlayTime = 0;
 
@@ -100,7 +101,7 @@
       mediaStream = await navigator.mediaDevices.getUserMedia({ 
         audio: { 
           channelCount: 1, 
-          sampleRate: 16000,
+          sampleRate: 16000, 
           echoCancellation: true, 
           noiseSuppression: true,
           autoGainControl: true
@@ -134,7 +135,7 @@
         }
       };
       ws.send(JSON.stringify(setupMessage));
-      startAudioPipeline();
+      startStreamingMic();
     };
 
     ws.onmessage = async (event) => {
@@ -147,7 +148,7 @@
           for (const part of parts) {
             if (part.text) {
               const box = document.getElementById('chat-box');
-              box.innerHTML += `<div style="margin: 4px 0;"><b style="color:#34d399;">Anvaya:</b> ${part.text}</div>`;
+              box.innerHTML += `<div style="margin: 4px 0;"><b style="color:#6ee7b7;">Anvaya:</b> ${part.text}</div>`;
               box.scrollTop = box.scrollHeight;
             }
             if (part.inlineData && part.inlineData.data) {
@@ -171,62 +172,40 @@
     };
   }
 
-  async function startAudioPipeline() {
-    const source = audioContext.createMediaStreamSource(mediaStream);
-    
-    // Create an inline AudioWorklet via Blob to completely bypass ScriptProcessor deprecation and lock mic stream
-    const workletCode = `
-      class RecorderWorker extends AudioWorkletProcessor {
-        process(inputs) {
-          const input = inputs[0];
-          if (input && input.length > 0) {
-            const channelData = input[0];
-            const pcm16 = new Int16Array(channelData.length);
-            for (let i = 0; i < channelData.length; i++) {
-              let s = Math.max(-1, Math.min(1, channelData[i]));
-              pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-            }
-            this.port.postMessage(pcm16.buffer, [pcm16.buffer]);
-          }
-          return true;
-        }
-      }
-      registerProcessor('recorder-worker', RecorderWorker);
-    `;
+  function startStreamingMic() {
+    inputSource = audioContext.createMediaStreamSource(mediaStream);
+    processor = audioContext.createScriptProcessor(4096, 1, 1);
 
-    const blob = new Blob([workletCode], { type: 'application/javascript' });
-    const workletUrl = URL.createObjectURL(blob);
-
-    try {
-      await audioContext.audioWorklet.addModule(workletUrl);
-      workletNode = new AudioWorkletNode(audioContext, 'recorder-worker');
+    processor.onaudioprocess = (e) => {
+      if (!isConnected || !ws || ws.readyState !== WebSocket.OPEN) return;
       
-      workletNode.port.onmessage = (event) => {
-        if (!isConnected || !ws || ws.readyState !== WebSocket.OPEN) return;
-        
-        const pcmBuffer = event.data;
-        let binary = "";
-        const bytes = new Uint8Array(pcmBuffer);
-        const len = bytes.byteLength;
-        for (let i = 0; i < len; i++) {
-          binary += String.fromCharCode(bytes[i]);
+      const inputData = e.inputBuffer.getChannelData(0);
+      const pcm16 = new Int16Array(inputData.length);
+      for (let i = 0; i < inputData.length; i++) {
+        let s = Math.max(-1, Math.min(1, inputData[i]));
+        pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+      }
+
+      let binary = "";
+      const bytes = new Uint8Array(pcm16.buffer);
+      const len = bytes.byteLength;
+      for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const base64Data = btoa(binary);
+
+      ws.send(JSON.stringify({
+        realtimeInput: {
+          mediaChunks: [{ mimeType: "audio/pcm;rate=16000", data: base64Data }]
         }
-        const base64Data = btoa(binary);
+      }));
+    };
 
-        ws.send(JSON.stringify({
-          realtimeInput: {
-            mediaChunks: [{ mimeType: "audio/pcm;rate=16000", data: base64Data }]
-          }
-        }));
-      };
-
-      source.connect(workletNode);
-      workletNode.connect(audioContext.destination);
-    } catch (e) {
-      console.error("Worklet initialization error:", e);
-      document.getElementById('status').innerText = "Audio pipeline failure.";
-      stopLiveSession();
-    }
+    inputSource.connect(processor);
+    const safetyGain = audioContext.createGain();
+    safetyGain.gain.value = 0;
+    processor.connect(safetyGain);
+    safetyGain.connect(audioContext.destination);
   }
 
   function playAudioChunk(base64Data) {
@@ -263,7 +242,8 @@
     isConnected = false;
     nextPlayTime = 0;
 
-    if (workletNode) { workletNode.disconnect(); workletNode = null; }
+    if (processor) { processor.disconnect(); processor = null; }
+    if (inputSource) { inputSource.disconnect(); inputSource = null; }
     if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
     if (ws) { ws.close(); ws = null; }
     if (audioContext && audioContext.state !== 'closed') { audioContext.close(); audioContext = null; }
