@@ -1,697 +1,279 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anvaya by Raj Thakkar</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            background: #0b0f19;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            text-align: center;
-            padding: 20px;
-            color: #f3f4f6;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        .card {
-            background: #111827;
-            padding: 30px 24px;
-            border-radius: 32px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
-            width: 100%;
-            max-width: 440px;
-            border: 1px solid #1f2937;
-            position: relative;
-        }
-        .branding-top {
-            font-size: 13px;
-            font-weight: 700;
-            color: #60a5fa;
-            margin-bottom: 18px;
-            letter-spacing: 2.5px;
-            text-transform: uppercase;
-        }
-        .branding-bottom {
-            font-size: 11px;
-            font-weight: 600;
-            color: #475569;
-            margin-top: 22px;
-            border-top: 1px solid #1f2937;
-            padding-top: 16px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-        .sub-text {
-            font-size: 13px;
-            color: #9ca3af;
-            margin-bottom: 16px;
-            line-height: 1.5;
-        }
-        input {
-            padding: 14px 16px;
-            font-size: 15px;
-            border-radius: 14px;
-            border: 1px solid #374151;
-            margin: 8px 0 12px;
-            width: 100%;
-            background: #1f2937;
-            color: #ffffff;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        input:focus {
-            border-color: #60a5fa;
-        }
-        input::placeholder {
-            color: #6b7280;
-        }
-        .btn {
-            padding: 14px;
-            font-size: 16px;
-            border-radius: 14px;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            width: 100%;
-            margin: 6px 0;
-            background: #3b82f6;
-            color: white;
-            transition: background 0.2s, transform 0.1s;
-        }
-        .btn:hover {
-            background: #2563eb;
-        }
-        .btn:active {
-            transform: scale(0.98);
-        }
-        .link-btn {
-            background: #1f2937;
-            text-decoration: none;
-            display: inline-block;
-            color: #9ca3af;
-            border-radius: 14px;
-            padding: 12px 16px;
-            font-weight: 500;
-            font-size: 14px;
-            width: 100%;
-            border: 1px solid #374151;
-            transition: background 0.2s, color 0.2s;
-            margin-bottom: 6px;
-        }
-        .link-btn:hover {
-            color: #ffffff;
-            background: #374151;
-        }
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anvaya by Raj Thakkar</title>
+  <style>
+    body { background: #0b0f19; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; padding: 20px; color: #f3f4f6; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; box-sizing: border-box; }
+    .card { background: #111827; padding: 30px; border-radius: 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); width: 100%; max-width: 420px; border: 1px solid #1f2937; }
+    input { padding: 14px; font-size: 15px; border-radius: 14px; border: 1px solid #374151; margin: 10px 0; width: 100%; box-sizing: border-box; background: #1f2937; color: #ffffff; outline: none; }
+    input:focus { border-color: #10b981; }
+    button { padding: 14px; font-size: 16px; border-radius: 14px; border: none; cursor: pointer; font-weight: 600; width: 100%; margin: 10px 0; background: #10b981; color: white; transition: background 0.2s; }
+    button:hover { background: #059669; }
+    .link-btn { background: #1f2937; text-decoration: none; display: inline-block; color: #9ca3af; border-radius: 14px; padding: 12px; font-weight: 500; font-size: 14px; width: 100%; box-sizing: border-box; margin-bottom: 10px; border: 1px solid #374151; }
+    .link-btn:hover { color: #ffffff; background: #374151; }
 
-        /* ---- ORB ---- */
-        .live-orb {
-            width: 120px;
-            height: 120px;
-            background: radial-gradient(circle at 30% 30%, #3b82f6, #1d4ed8 60%, #1e40af);
-            border-radius: 50%;
-            margin: 18px auto 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            border: none;
-            box-shadow: 0 0 40px rgba(59, 130, 246, 0.35);
-            transition: transform 0.2s, box-shadow 0.3s;
-            position: relative;
-            touch-action: manipulation;
-        }
-        .live-orb::after {
-            content: '';
-            position: absolute;
-            inset: -5px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #60a5fa, #3b82f6, #9333ea, #ec4899);
-            z-index: -1;
-            filter: blur(10px);
-            opacity: 0.5;
-            transition: opacity 0.4s;
-        }
-        .live-orb:hover {
-            transform: scale(1.03);
-        }
-        .live-orb:active {
-            transform: scale(0.94);
-        }
-        .live-orb.active {
-            animation: geminiPulse 2s infinite ease-in-out;
-        }
-        .live-orb.active::after {
-            opacity: 0.9;
-        }
-        .live-orb .orb-icon {
-            width: 40px;
-            height: 40px;
-            fill: white;
-        }
+    .live-orb { width: 120px; height: 120px; background: radial-gradient(circle, #10b981 0%, #047857 50%, #065f46 100%); border-radius: 50%; margin: 30px auto; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; box-shadow: 0 0 40px rgba(16, 185, 129, 0.4); transition: transform 0.2s; position: relative; }
+    .live-orb::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; background: linear-gradient(45deg, #34d399, #10b981, #059669, #047857); z-index: -1; filter: blur(8px); opacity: 0.7; }
+    .live-orb.active { animation: geminiPulse 2s infinite ease-in-out; }
+    @keyframes geminiPulse {
+      0% { transform: scale(1); box-shadow: 0 0 30px rgba(16, 185, 129, 0.5); }
+      50% { transform: scale(1.08); box-shadow: 0 0 60px rgba(52, 211, 153, 0.8); }
+      100% { transform: scale(1); box-shadow: 0 0 30px rgba(16, 185, 129, 0.5); }
+    }
 
-        @keyframes geminiPulse {
-            0% {
-                transform: scale(1);
-                box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
-            }
-            50% {
-                transform: scale(1.07);
-                box-shadow: 0 0 70px rgba(147, 51, 234, 0.7);
-            }
-            100% {
-                transform: scale(1);
-                box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
-            }
-        }
-
-        /* ---- Chat box ---- */
-        #chat-box {
-            height: 170px;
-            border: 1px solid #1f2937;
-            border-radius: 16px;
-            overflow-y: auto;
-            margin: 12px 0 10px;
-            padding: 14px 16px;
-            text-align: left;
-            background: #0f172a;
-            font-size: 13px;
-            color: #94a3b8;
-            scroll-behavior: smooth;
-            line-height: 1.6;
-        }
-        #chat-box .sys {
-            color: #60a5fa;
-            font-weight: 600;
-        }
-        #chat-box .user-label {
-            color: #a78bfa;
-            font-weight: 600;
-        }
-        #chat-box .bot-label {
-            color: #34d399;
-            font-weight: 600;
-        }
-        #chat-box .msg {
-            margin: 3px 0;
-        }
-
-        #status {
-            font-weight: 500;
-            color: #60a5fa;
-            margin: 8px 0 4px;
-            font-size: 14px;
-            min-height: 22px;
-        }
-        #status.error {
-            color: #f87171;
-        }
-        #status.success {
-            color: #34d399;
-        }
-
-        .mic-indicator {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #4b5563;
-            margin-right: 8px;
-            transition: background 0.2s;
-            vertical-align: middle;
-        }
-        .mic-indicator.active {
-            background: #34d399;
-            box-shadow: 0 0 12px rgba(52, 211, 153, 0.5);
-            animation: micBlink 0.8s infinite alternate;
-        }
-        @keyframes micBlink {
-            0% {
-                opacity: 0.6;
-                transform: scale(0.9);
-            }
-            100% {
-                opacity: 1;
-                transform: scale(1.1);
-            }
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        .flex-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .btn-secondary {
-            background: #1f2937;
-            color: #9ca3af;
-            border: 1px solid #374151;
-            padding: 10px 16px;
-            font-size: 13px;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: background 0.2s, color 0.2s;
-            font-weight: 500;
-        }
-        .btn-secondary:hover {
-            background: #374151;
-            color: #fff;
-        }
-
-        /* scrollbar */
-        #chat-box::-webkit-scrollbar {
-            width: 4px;
-        }
-        #chat-box::-webkit-scrollbar-track {
-            background: #0f172a;
-        }
-        #chat-box::-webkit-scrollbar-thumb {
-            background: #374151;
-            border-radius: 8px;
-        }
-    </style>
+    #chat-box { height: 180px; border: 1px solid #1f2937; border-radius: 16px; overflow-y: auto; margin-bottom: 15px; padding: 14px; text-align: left; background: #0f172a; font-size: 13px; color: #94a3b8; }
+    .branding-top { font-size: 13px; font-weight: 600; color: #34d399; margin-bottom: 20px; letter-spacing: 2px; text-transform: uppercase; }
+    .branding-bottom { font-size: 12px; font-weight: 600; color: #64748b; margin-top: 25px; letter-spacing: 2px; border-top: 1px solid #1f2937; padding-top: 15px; text-transform: uppercase; }
+    #status { font-weight: 500; color: #34d399; margin: 12px 0; font-size: 14px; }
+  </style>
 </head>
 <body>
 
-    <div class="card">
-        <div class="branding-top">Anvaya by Raj Thakkar</div>
+<div class="card">
+  <div class="branding-top">Anvaya by Raj Thakkar</div>
+  
+  <div id="setup-screen">
+    <p style="font-size: 13px; color: #9ca3af; margin-bottom: 15px;">Paste your Google AI Studio API Key:</p>
+    <a href="https://aistudio.google.com/app/apikey" target="_blank" class="link-btn">Get Free API Key</a>
+    <input type="password" id="apiKeyInput" placeholder="AIzaSy...">
+    <button onclick="saveKey()">Save Key & Connect</button>
+  </div>
 
-        <!-- SETUP SCREEN -->
-        <div id="setup-screen">
-            <p class="sub-text">Paste your Google AI Studio API Key to enable live voice:</p>
-            <a href="https://aistudio.google.com/app/apikey" target="_blank" class="link-btn">Get Free API Key</a>
-            <input type="password" id="apiKeyInput" placeholder="AIzaSy...">
-            <button class="btn" onclick="saveKey()">Start Live Session</button>
-        </div>
+  <div id="app-screen" style="display:none;">
+    <div id="chat-box"><div><b style="color:#34d399;">System:</b> Tap the orb to start.</div></div>
+    <div id="status">Ready</div>
+    <button id="orbBtn" class="live-orb" onclick="toggleLiveSession()">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C11.45 2 11 2.45 11 3V5C11 5.55 11.45 6 12 6C12.55 6 13 5.55 13 5V3C13 2.45 12.55 2 12 2ZM19 11C19 14.53 16.39 17.44 13 17.93V20H15C15.55 20 16 20.45 16 21C16 21.55 15.55 22 15 22H9C8.45 22 8 21.55 8 21C8 20.45 8.45 20 9 20H11V17.93C7.61 17.44 5 14.53 5 11C5 10.45 5.45 10 6 10C6.55 10 7 10.45 7 11C7 13.76 9.24 16 12 16C14.76 16 17 13.76 17 11C17 10.45 17.45 10 18 10C18.55 10 19 10.45 19 11ZM12 14C10.34 14 9 12.66 9 11V6C9 4.34 10.34 3 12 3C13.66 3 15 4.34 15 6V11C15 12.66 13.66 14 12 14Z" fill="white"/>
+      </svg>
+    </button>
+  </div>
 
-        <!-- APP SCREEN -->
-        <div id="app-screen" class="hidden">
-            <div id="chat-box">
-                <div class="msg"><span class="sys">System:</span> Tap the orb to launch live voice.</div>
-            </div>
+  <div class="branding-bottom">Powered by Raj Thakkar</div>
+</div>
 
-            <div id="status">
-                <span class="mic-indicator" id="micDot"></span>
-                <span id="statusText">Ready</span>
-            </div>
+<script>
+  let ws = null;
+  let audioContext = null;
+  let mediaStream = null;
+  let workletNode = null;
+  let isConnected = false;
+  let nextPlayTime = 0;
 
-            <button id="orbBtn" class="live-orb" onclick="toggleLiveSession()" aria-label="Toggle voice">
-                <svg class="orb-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2C11.45 2 11 2.45 11 3V5C11 5.55 11.45 6 12 6C12.55 6 13 5.55 13 5V3C13 2.45 12.55 2 12 2ZM19 11C19 14.53 16.39 17.44 13 17.93V20H15C15.55 20 16 20.45 16 21C16 21.55 15.55 22 15 22H9C8.45 22 8 21.55 8 21C8 20.45 8.45 20 9 20H11V17.93C7.61 17.44 5 14.53 5 11C5 10.45 5.45 10 6 10C6.55 10 7 10.45 7 11C7 13.76 9.24 16 12 16C14.76 16 17 13.76 17 11C17 10.45 17.45 10 18 10C18.55 10 19 10.45 19 11ZM12 14C10.34 14 9 12.66 9 11V6C9 4.34 10.34 3 12 3C13.66 3 15 4.34 15 6V11C15 12.66 13.66 14 12 14Z" fill="white"/>
-                </svg>
-            </button>
+  function saveKey() {
+    const key = document.getElementById('apiKeyInput').value.trim();
+    if(!key) { alert("Please paste your API key!"); return; }
+    localStorage.setItem('anvaya_key', key);
+    document.getElementById('setup-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'block';
+  }
 
-            <div style="margin-top: 10px;">
-                <button class="btn-secondary" onclick="clearChat()" style="font-size:12px; padding:6px 14px;">Clear Chat</button>
-            </div>
-        </div>
+  window.onload = function() {
+    if(localStorage.getItem('anvaya_key')) {
+      document.getElementById('setup-screen').style.display = 'none';
+      document.getElementById('app-screen').style.display = 'block';
+    }
+  }
 
-        <div class="branding-bottom">Powered by Raj Thakkar</div>
-    </div>
+  async function toggleLiveSession() {
+    if (isConnected) {
+      stopLiveSession();
+    } else {
+      await startLiveSession();
+    }
+  }
 
-    <script>
-        // ---- STATE ----
-        let ws = null;
-        let audioContext = null;
-        let mediaStream = null;
-        let processor = null;
-        let inputSource = null;
-        let safetyGain = null;
-        let isConnected = false;
-        let isStreaming = false;
-        let nextPlayTime = 0;
-        let reconnectTimer = null;
-        let micActivityCounter = 0;
+  async function startLiveSession() {
+    const apiKey = localStorage.getItem('anvaya_key');
+    if (!apiKey) return;
 
-        const CHAT_BOX = document.getElementById('chat-box');
-        const STATUS_TEXT = document.getElementById('statusText');
-        const MIC_DOT = document.getElementById('micDot');
-        const ORB_BTN = document.getElementById('orbBtn');
-        const SETUP_SCREEN = document.getElementById('setup-screen');
-        const APP_SCREEN = document.getElementById('app-screen');
+    document.getElementById('status').innerText = "Connecting...";
 
-        // ---- HELPERS ----
-        function setStatus(text, type) {
-            STATUS_TEXT.textContent = text;
-            STATUS_TEXT.parentElement.className = '';
-            if (type === 'error') STATUS_TEXT.parentElement.classList.add('error');
-            else if (type === 'success') STATUS_TEXT.parentElement.classList.add('success');
+    try {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
+
+      mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        audio: { 
+          channelCount: 1, 
+          sampleRate: 16000,
+          echoCancellation: true, 
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
+    } catch (err) {
+      document.getElementById('status').innerText = "Microphone access blocked!";
+      console.error(err);
+      return;
+    }
+
+    const url = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${apiKey}`;
+    ws = new WebSocket(url);
+
+    ws.onopen = () => {
+      isConnected = true;
+      nextPlayTime = 0;
+      document.getElementById('orbBtn').classList.add('active');
+      document.getElementById('status').innerText = "Live connection active. Speak now.";
+      
+      const setupMessage = {
+        setup: {
+          model: "models/gemini-2.0-flash-exp",
+          generationConfig: {
+            responseModalities: ["AUDIO"],
+            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } } }
+          },
+          systemInstruction: {
+            parts: [{ text: "You are Anvaya, an instant, natural, fluid voice conversational partner built by Raj Thakkar. Reply directly and conversationally." }]
+          }
         }
+      };
+      ws.send(JSON.stringify(setupMessage));
+      startAudioPipeline();
+    };
 
-        function setMicDot(active) {
-            MIC_DOT.classList.toggle('active', active);
+    ws.onmessage = async (event) => {
+      try {
+        const text = event.data instanceof Blob ? await event.data.text() : event.data;
+        const response = JSON.parse(text);
+        
+        if (response.serverContent && response.serverContent.modelTurn) {
+          const parts = response.serverContent.modelTurn.parts;
+          for (const part of parts) {
+            if (part.text) {
+              const box = document.getElementById('chat-box');
+              box.innerHTML += `<div style="margin: 4px 0;"><b style="color:#34d399;">Anvaya:</b> ${part.text}</div>`;
+              box.scrollTop = box.scrollHeight;
+            }
+            if (part.inlineData && part.inlineData.data) {
+              playAudioChunk(part.inlineData.data);
+            }
+          }
         }
+      } catch (e) {
+        console.error("Parse error:", e);
+      }
+    };
 
-        function appendChat(label, text, cls) {
-            const div = document.createElement('div');
-            div.className = 'msg';
-            div.innerHTML = `<span class="${cls}">${label}:</span> ${text}`;
-            CHAT_BOX.appendChild(div);
-            CHAT_BOX.scrollTop = CHAT_BOX.scrollHeight;
+    ws.onerror = (err) => {
+      console.error("WebSocket error:", err);
+      document.getElementById('status').innerText = "Connection error.";
+      stopLiveSession();
+    };
+
+    ws.onclose = () => {
+      stopLiveSession();
+    };
+  }
+
+  async function startAudioPipeline() {
+    const source = audioContext.createMediaStreamSource(mediaStream);
+    
+    // Create an inline AudioWorklet via Blob to completely bypass ScriptProcessor deprecation and lock mic stream
+    const workletCode = `
+      class RecorderWorker extends AudioWorkletProcessor {
+        process(inputs) {
+          const input = inputs[0];
+          if (input && input.length > 0) {
+            const channelData = input[0];
+            const pcm16 = new Int16Array(channelData.length);
+            for (let i = 0; i < channelData.length; i++) {
+              let s = Math.max(-1, Math.min(1, channelData[i]));
+              pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+            }
+            this.port.postMessage(pcm16.buffer, [pcm16.buffer]);
+          }
+          return true;
         }
+      }
+      registerProcessor('recorder-worker', RecorderWorker);
+    `;
 
-        function clearChat() {
-            CHAT_BOX.innerHTML = '';
-            appendChat('System', 'Chat cleared.', 'sys');
+    const blob = new Blob([workletCode], { type: 'application/javascript' });
+    const workletUrl = URL.createObjectURL(blob);
+
+    try {
+      await audioContext.audioWorklet.addModule(workletUrl);
+      workletNode = new AudioWorkletNode(audioContext, 'recorder-worker');
+      
+      workletNode.port.onmessage = (event) => {
+        if (!isConnected || !ws || ws.readyState !== WebSocket.OPEN) return;
+        
+        const pcmBuffer = event.data;
+        let binary = "";
+        const bytes = new Uint8Array(pcmBuffer);
+        const len = bytes.byteLength;
+        for (let i = 0; i < len; i++) {
+          binary += String.fromCharCode(bytes[i]);
         }
+        const base64Data = btoa(binary);
 
-        function saveKey() {
-            const key = document.getElementById('apiKeyInput').value.trim();
-            if (!key) { alert('Please paste your API key!'); return; }
-            if (!key.startsWith('AIza')) { alert('Invalid API key format. It should start with "AIza".'); return; }
-            localStorage.setItem('anvaya_key', key);
-            SETUP_SCREEN.classList.add('hidden');
-            APP_SCREEN.classList.remove('hidden');
-            setStatus('Ready', '');
-        }
+        ws.send(JSON.stringify({
+          realtimeInput: {
+            mediaChunks: [{ mimeType: "audio/pcm;rate=16000", data: base64Data }]
+          }
+        }));
+      };
 
-        // ---- PERSIST KEY ----
-        window.onload = function() {
-            if (localStorage.getItem('anvaya_key')) {
-                SETUP_SCREEN.classList.add('hidden');
-                APP_SCREEN.classList.remove('hidden');
-                setStatus('Ready', '');
-            }
-        };
+      source.connect(workletNode);
+      workletNode.connect(audioContext.destination);
+    } catch (e) {
+      console.error("Worklet initialization error:", e);
+      document.getElementById('status').innerText = "Audio pipeline failure.";
+      stopLiveSession();
+    }
+  }
 
-        // ---- TOGGLE ----
-        async function toggleLiveSession() {
-            if (isConnected) {
-                stopLiveSession();
-            } else {
-                await startLiveSession();
-            }
-        }
+  function playAudioChunk(base64Data) {
+    if (!audioContext) return;
 
-        // ---- START ----
-        async function startLiveSession() {
-            const apiKey = localStorage.getItem('anvaya_key');
-            if (!apiKey) {
-                setStatus('API key missing. Please set it up.', 'error');
-                return;
-            }
+    const binary = atob(base64Data);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) { bytes[i] = binary.charCodeAt(i); }
+    
+    const pcm16 = new Int16Array(bytes.buffer);
+    const float32 = new Float32Array(pcm16.length);
+    for (let i = 0; i < pcm16.length; i++) { float32[i] = pcm16[i] / 32768.0; }
 
-            if (isConnected) return;
+    const audioBuffer = audioContext.createBuffer(1, float32.length, 24000);
+    audioBuffer.getChannelData(0).set(float32);
 
-            setStatus('Connecting microphone…', '');
-            setMicDot(false);
+    const source = audioContext.createBufferSource();
+    source.buffer = audioBuffer;
+    
+    const gainNode = audioContext.createGain();
+    gainNode.gain.value = 2.0;
+    source.connect(gainNode);
+    gainNode.connect(audioContext.destination);
 
-            try {
-                // 1) AudioContext at 16000 Hz (input rate)
-                audioContext = new(window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
-                if (audioContext.state === 'suspended') {
-                    await audioContext.resume();
-                }
-                if (audioContext.state !== 'running') {
-                    throw new Error('AudioContext failed to start.');
-                }
+    const currentTime = audioContext.currentTime;
+    if (nextPlayTime < currentTime) {
+      nextPlayTime = currentTime;
+    }
+    source.start(nextPlayTime);
+    nextPlayTime += audioBuffer.duration;
+  }
 
-                // 2) Get mic at 16000 Hz
-                mediaStream = await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                        channelCount: 1,
-                        sampleRate: 16000,
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        autoGainControl: true
-                    }
-                });
+  function stopLiveSession() {
+    isConnected = false;
+    nextPlayTime = 0;
 
-                const tracks = mediaStream.getAudioTracks();
-                if (!tracks.length) throw new Error('No audio tracks found.');
-                if (tracks[0].readyState !== 'live') throw new Error('Audio track is not live.');
+    if (workletNode) { workletNode.disconnect(); workletNode = null; }
+    if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
+    if (ws) { ws.close(); ws = null; }
+    if (audioContext && audioContext.state !== 'closed') { audioContext.close(); audioContext = null; }
 
-                // 3) WebSocket
-                const url =
-                    `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${apiKey}`;
-                ws = new WebSocket(url);
+    const orb = document.getElementById('orbBtn');
+    if (orb) orb.classList.remove('active');
+    const status = document.getElementById('status');
+    if (status) status.innerText = "Ready";
+  }
+</script>
 
-                ws.onopen = () => {
-                    isConnected = true;
-                    isStreaming = true;
-                    nextPlayTime = 0;
-                    ORB_BTN.classList.add('active');
-                    setStatus('🎙️ Live — speak now', 'success');
-                    setMicDot(true);
-
-                    // Setup message
-                    const setupMsg = {
-                        setup: {
-                            model: 'models/gemini-2.0-flash-exp',
-                            generationConfig: {
-                                responseModalities: ['AUDIO'],
-                                speechConfig: {
-                                    voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Puck' } }
-                                }
-                            },
-                            systemInstruction: {
-                                parts: [{ text: 'You are Anvaya, an instant, natural, fluid voice conversational partner built by Raj Thakkar. Reply directly and conversationally. Keep responses concise and warm.' }]
-                            }
-                        }
-                    };
-                    ws.send(JSON.stringify(setupMsg));
-
-                    // Start mic streaming
-                    startStreamingMic();
-                    appendChat('System', 'Voice channel open. Start speaking!', 'sys');
-                };
-
-                ws.onmessage = async (event) => {
-                    try {
-                        const text = event.data instanceof Blob ? await event.data.text() : event.data;
-                        const response = JSON.parse(text);
-
-                        if (response.serverContent && response.serverContent.modelTurn) {
-                            const parts = response.serverContent.modelTurn.parts || [];
-                            for (const part of parts) {
-                                if (part.text) {
-                                    appendChat('Anvaya', part.text, 'bot-label');
-                                }
-                                if (part.inlineData && part.inlineData.data) {
-                                    playAudioChunk(part.inlineData.data);
-                                }
-                            }
-                        }
-                        if (response.serverContent && response.serverContent.interrupted) {
-                            // interruption – flush audio queue
-                            nextPlayTime = audioContext ? audioContext.currentTime : 0;
-                        }
-                    } catch (e) {
-                        console.warn('Parse error:', e);
-                    }
-                };
-
-                ws.onerror = (err) => {
-                    console.error('WebSocket error:', err);
-                    setStatus('Connection error. Check API key.', 'error');
-                    stopLiveSession();
-                };
-
-                ws.onclose = () => {
-                    if (isConnected) {
-                        setStatus('Disconnected.', 'error');
-                        stopLiveSession();
-                    }
-                };
-
-            } catch (err) {
-                console.error('Start error:', err);
-                let msg = err.message || 'Microphone access failed.';
-                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                    msg = 'Microphone permission denied. Please allow mic access and try again.';
-                } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-                    msg = 'No microphone found. Please connect a mic.';
-                }
-                setStatus('❌ ' + msg, 'error');
-                setMicDot(false);
-                // Cleanup partial state
-                if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop());
-                    mediaStream = null; }
-                if (audioContext && audioContext.state !== 'closed') { await audioContext.close();
-                    audioContext = null; }
-                ORB_BTN.classList.remove('active');
-                isConnected = false;
-                isStreaming = false;
-            }
-        }
-
-        // ---- STREAM MIC ----
-        function startStreamingMic() {
-            if (!audioContext || !mediaStream) return;
-            if (processor) {
-                processor.disconnect();
-                processor = null;
-            }
-            if (inputSource) {
-                inputSource.disconnect();
-                inputSource = null;
-            }
-            if (safetyGain) {
-                safetyGain.disconnect();
-                safetyGain = null;
-            }
-
-            try {
-                inputSource = audioContext.createMediaStreamSource(mediaStream);
-
-                // ScriptProcessor: 4096 samples @ 16000 Hz → ~4 chunks/sec
-                processor = audioContext.createScriptProcessor(4096, 1, 1);
-
-                processor.onaudioprocess = (e) => {
-                    if (!isConnected || !ws || ws.readyState !== WebSocket.OPEN) return;
-
-                    const inputData = e.inputBuffer.getChannelData(0);
-                    // Convert Float32 → Int16 (PCM16)
-                    const pcm16 = new Int16Array(inputData.length);
-                    for (let i = 0; i < inputData.length; i++) {
-                        let s = Math.max(-1, Math.min(1, inputData[i]));
-                        pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-                    }
-
-                    // Base64 encode
-                    const bytes = new Uint8Array(pcm16.buffer);
-                    let binary = '';
-                    for (let i = 0; i < bytes.length; i++) {
-                        binary += String.fromCharCode(bytes[i]);
-                    }
-                    const base64Data = btoa(binary);
-
-                    ws.send(JSON.stringify({
-                        realtimeInput: {
-                            mediaChunks: [{ mimeType: 'audio/pcm;rate=16000', data: base64Data }]
-                        }
-                    }));
-
-                    // Visual mic activity (blink every ~4 chunks)
-                    micActivityCounter++;
-                    if (micActivityCounter % 3 === 0) {
-                        setMicDot(true);
-                    }
-                };
-
-                // Connect processor → gain (tiny value to keep pipeline alive)
-                safetyGain = audioContext.createGain();
-                safetyGain.gain.value = 0.001; // near-silent, keeps processor alive
-                processor.connect(safetyGain);
-                safetyGain.connect(audioContext.destination);
-
-                inputSource.connect(processor);
-
-                // Also connect inputSource directly to a gain 0 node as a backup
-                // to ensure the browser keeps the audio graph active.
-                const backupGain = audioContext.createGain();
-                backupGain.gain.value = 0;
-                inputSource.connect(backupGain);
-                backupGain.connect(audioContext.destination);
-
-            } catch (err) {
-                console.error('Mic streaming error:', err);
-                setStatus('Mic streaming error: ' + err.message, 'error');
-                stopLiveSession();
-            }
-        }
-
-        // ---- PLAY AUDIO (24000 Hz → resampled by browser to 16000 Hz) ----
-        function playAudioChunk(base64Data) {
-            if (!audioContext) return;
-
-            try {
-                const binary = atob(base64Data);
-                const bytes = new Uint8Array(binary.length);
-                for (let i = 0; i < binary.length; i++) { bytes[i] = binary.charCodeAt(i); }
-
-                const pcm16 = new Int16Array(bytes.buffer);
-                const float32 = new Float32Array(pcm16.length);
-                for (let i = 0; i < pcm16.length; i++) {
-                    float32[i] = pcm16[i] / 32768.0;
-                }
-
-                // Buffer at 24000 Hz (Gemini output rate)
-                const audioBuffer = audioContext.createBuffer(1, float32.length, 24000);
-                audioBuffer.getChannelData(0).set(float32);
-
-                const source = audioContext.createBufferSource();
-                source.buffer = audioBuffer;
-
-                const gainNode = audioContext.createGain();
-                gainNode.gain.value = 1.6; // slightly boost volume
-
-                source.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-
-                // Schedule for gapless playback
-                const currentTime = audioContext.currentTime;
-                if (nextPlayTime < currentTime) {
-                    nextPlayTime = currentTime;
-                }
-                source.start(nextPlayTime);
-                nextPlayTime += audioBuffer.duration;
-
-            } catch (e) {
-                console.warn('Playback error:', e);
-            }
-        }
-
-        // ---- STOP ----
-        function stopLiveSession() {
-            isConnected = false;
-            isStreaming = false;
-            nextPlayTime = 0;
-
-            if (processor) {
-                try { processor.disconnect(); } catch (e) { /* ignore */ }
-                processor = null;
-            }
-            if (inputSource) {
-                try { inputSource.disconnect(); } catch (e) { /* ignore */ }
-                inputSource = null;
-            }
-            if (safetyGain) {
-                try { safetyGain.disconnect(); } catch (e) { /* ignore */ }
-                safetyGain = null;
-            }
-            if (mediaStream) {
-                mediaStream.getTracks().forEach(t => t.stop());
-                mediaStream = null;
-            }
-            if (ws) {
-                try { ws.close(); } catch (e) { /* ignore */ }
-                ws = null;
-            }
-            if (audioContext && audioContext.state !== 'closed') {
-                try { audioContext.close(); } catch (e) { /* ignore */ }
-                audioContext = null;
-            }
-
-            ORB_BTN.classList.remove('active');
-            setMicDot(false);
-            setStatus('Ready', '');
-            appendChat('System', 'Voice session ended.', 'sys');
-        }
-
-        // ---- KEYBOARD SHORTCUT: Enter to save key ----
-        document.getElementById('apiKeyInput').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') saveKey();
-        });
-
-        // ---- CLEANUP on page unload ----
-        window.addEventListener('beforeunload', () => {
-            stopLiveSession();
-        });
-
-        console.log('Anvaya loaded. Tap the orb to start voice.');
-    </script>
 </body>
 </html>
