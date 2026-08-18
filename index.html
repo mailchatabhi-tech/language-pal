@@ -57,7 +57,7 @@
   let isConnected = false;
   let audioQueue = [];
   let isPlaying = false;
-  let gainNode = null;
+  let masterGain = null;
 
   function saveKey() {
     const key = document.getElementById('apiKeyInput').value.trim();
@@ -93,10 +93,6 @@
       if (audioContext.state === 'suspended') {
         await audioContext.resume();
       }
-
-      gainNode = audioContext.createGain();
-      gainNode.gain.value = 2.5; 
-      gainNode.connect(audioContext.destination);
 
       mediaStream = await navigator.mediaDevices.getUserMedia({ 
         audio: { channelCount: 1, sampleRate: 16000, echoCancellation: true, noiseSuppression: true } 
@@ -168,6 +164,9 @@
     const source = audioContext.createMediaStreamSource(mediaStream);
     scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
 
+    masterGain = audioContext.createGain();
+    masterGain.gain.value = 1.0; // Volume output control
+
     scriptProcessor.onaudioprocess = (e) => {
       if (!isConnected || !ws || ws.readyState !== WebSocket.OPEN) return;
       
@@ -186,8 +185,10 @@
       }));
     };
 
+    // CRITICAL: Connecting processor to destination keeps the browser audio clock running so mic data flows continuously
     source.connect(scriptProcessor);
-    scriptProcessor.connect(audioContext.destination);
+    scriptProcessor.connect(masterGain);
+    masterGain.connect(audioContext.destination);
   }
 
   function enqueueAudio(base64Data) {
@@ -216,7 +217,7 @@
 
     const source = audioContext.createBufferSource();
     source.buffer = buffer;
-    source.connect(gainNode);
+    source.connect(audioContext.destination);
     source.onended = () => playQueue();
     source.start();
   }
@@ -227,6 +228,7 @@
     audioQueue = [];
 
     if (scriptProcessor) { scriptProcessor.disconnect(); scriptProcessor = null; }
+    if (masterGain) { masterGain.disconnect(); masterGain = null; }
     if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
     if (ws) { ws.close(); ws = null; }
     if (audioContext && audioContext.state !== 'closed') { audioContext.close(); audioContext = null; }
