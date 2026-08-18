@@ -65,12 +65,12 @@
   let isConnected = false;
   let nextPlayTime = 0;
 
-  // Exact live endpoints prioritized with 3.1 Flash Live Preview leading
+  // Complete fallback pool sequenced to cycle automatically
   const fallbackModels = [
-    "models/gemini-3.1-flash-live-preview",
     "models/gemini-2.0-flash-exp",
     "models/gemini-2.0-flash",
-    "models/gemini-1.5-flash"
+    "models/gemini-1.5-flash",
+    "models/gemini-1.5-pro"
   ];
   let currentModelIndex = 0;
 
@@ -122,7 +122,7 @@
 
   async function tryConnectWithFallback() {
     if (currentModelIndex >= fallbackModels.length) {
-      document.getElementById('status').innerText = "Connection failed across all models.";
+      document.getElementById('status').innerText = "All model attempts failed. Please verify API key.";
       stopLiveSession();
       return;
     }
@@ -161,15 +161,24 @@
     ws = new WebSocket(url);
 
     ws.onopen = () => {
+      // Updated payload structure conforming to strict v1beta specifications
       const setupMessage = {
         setup: {
           model: modelToTry,
           generationConfig: {
             responseModalities: ["AUDIO"],
-            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } } }
+            speechConfig: {
+              voiceConfig: {
+                prebuiltVoiceConfig: {
+                  voiceName: "Puck"
+                }
+              }
+            }
           },
           systemInstruction: {
-            parts: [{ text: "You are Anvaya, a natural voice conversational partner built by Raj Thakkar. Reply directly and conversationally." }]
+            parts: [
+              { text: "You are Anvaya, a natural voice conversational partner built by Raj Thakkar. Reply directly and conversationally." }
+            ]
           }
         }
       };
@@ -213,9 +222,9 @@
     };
 
     ws.onclose = (event) => {
-      // Catch error code 1007 or 1008 and fallback instantly without stopping
-      if (!isConnected && (event.code === 1007 || event.code === 1008)) {
-        console.warn(`Model ${modelToTry} rejected with code ${event.code}. Trying next model...`);
+      // Seamlessly step to the next fallback model on failure codes 1007 or 1008
+      if (!isConnected && (event.code === 1007 || event.code === 1008 || event.code === 1006)) {
+        console.warn(`Model ${modelToTry} rejected (Code ${event.code}). Shifting fallback...`);
         if (ws) { ws.close(); ws = null; }
         currentModelIndex++;
         setTimeout(tryConnectWithFallback, 200);
