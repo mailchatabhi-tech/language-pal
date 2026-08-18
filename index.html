@@ -3,26 +3,27 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Language Pal by Raj Thakkar</title>
+  <title>Language Pal Live by Raj Thakkar</title>
   <style>
-    body { background: #f0f8ff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding: 20px; }
-    .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: inline-block; width: 100%; max-width: 450px; box-sizing: border-box; }
-    input { padding: 12px; font-size: 16px; border-radius: 10px; border: 2px solid #ccc; margin: 10px 0; width: 90%; box-sizing: border-box; }
-    button { padding: 14px; font-size: 18px; border-radius: 12px; border: none; cursor: pointer; font-weight: bold; width: 90%; margin: 10px 0; background: #ff7f50; color: white; }
-    .link-btn { background: #4285F4; text-decoration: none; display: inline-block; color: white; border-radius: 10px; padding: 12px; font-weight: bold; width: 90%; box-sizing: border-box; margin-bottom: 10px; }
+    body { background: #0f172a; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding: 20px; color: #f8fafc; }
+    .card { background: #1e293b; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); display: inline-block; width: 100%; max-width: 450px; box-sizing: border-box; border: 1px solid #334155; }
+    input { padding: 12px; font-size: 16px; border-radius: 10px; border: 1px solid #475569; margin: 10px 0; width: 90%; box-sizing: border-box; background: #0f172a; color: white; }
+    button { padding: 14px; font-size: 18px; border-radius: 12px; border: none; cursor: pointer; font-weight: bold; width: 90%; margin: 10px 0; background: #3b82f6; color: white; transition: background 0.2s; }
+    button:hover { background: #2563eb; }
+    .link-btn { background: #2563eb; text-decoration: none; display: inline-block; color: white; border-radius: 10px; padding: 12px; font-weight: bold; width: 90%; box-sizing: border-box; margin-bottom: 10px; }
     
-    /* Gemini Live Pulsing Orb Style */
-    .live-orb { width: 110px; height: 110px; background: linear-gradient(135deg, #4285F4, #9b59b6, #ff7f50); border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center; font-size: 45px; color: white; cursor: pointer; border: none; box-shadow: 0 0 20px rgba(66, 133, 244, 0.4); transition: transform 0.2s; }
-    .live-orb.listening { animation: livePulse 1.5s infinite; background: #ea4335; }
+    /* Gemini Live Pulsing Orb */
+    .live-orb { width: 110px; height: 110px; background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899); border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center; font-size: 45px; color: white; cursor: pointer; border: none; box-shadow: 0 0 25px rgba(59, 130, 246, 0.5); }
+    .live-orb.listening { animation: livePulse 1.5s infinite; background: #ef4444; box-shadow: 0 0 30px rgba(239, 68, 68, 0.8); }
     @keyframes livePulse {
-      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(234, 67, 53, 0.6); }
-      70% { transform: scale(1.08); box-shadow: 0 0 0 20px rgba(234, 67, 53, 0); }
-      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(234, 67, 53, 0); }
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      70% { transform: scale(1.1); box-shadow: 0 0 0 25px rgba(239, 68, 68, 0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
     }
 
-    #chat-box { height: 220px; border: 2px dashed #add8e6; border-radius: 10px; overflow-y: auto; margin-bottom: 10px; padding: 10px; text-align: left; background: #fffaf0; font-size: 14px; }
-    .branding { font-size: 18px; font-weight: bold; color: #2c3e50; margin-top: 20px; letter-spacing: 0.5px; border-top: 2px solid #eee; padding-top: 12px; }
-    #status { font-weight: bold; color: #4285F4; margin: 10px 0; font-size: 15px; }
+    #chat-box { height: 220px; border: 1px solid #475569; border-radius: 10px; overflow-y: auto; margin-bottom: 10px; padding: 10px; text-align: left; background: #0f172a; font-size: 14px; color: #e2e8f0; }
+    .branding { font-size: 18px; font-weight: bold; color: #f1f5f9; margin-top: 20px; letter-spacing: 0.5px; border-top: 1px solid #334155; padding-top: 12px; }
+    #status { font-weight: bold; color: #60a5fa; margin: 10px 0; font-size: 15px; }
   </style>
 </head>
 <body>
@@ -31,7 +32,7 @@
   <h2>🌍 Language Pal Live 🌍</h2>
   
   <div id="setup-screen">
-    <p style="font-size: 14px;">Enter your email and paste your free Google API key:</p>
+    <p style="font-size: 14px; color: #94a3b8;">Enter your email and paste your free Google API key:</p>
     <input type="email" id="parentEmail" placeholder="Your Email">
     <a href="https://aistudio.google.com/app/apikey" target="_blank" class="link-btn">1. Get Free Key from Google</a>
     <input type="password" id="apiKeyInput" placeholder="Paste your API key here">
@@ -39,7 +40,7 @@
   </div>
 
   <div id="app-screen" style="display:none;">
-    <div id="chat-box"><div><b>Tutor:</b> Tap the glowing orb to start speaking seamlessly!</div></div>
+    <div id="chat-box"><div><b>System:</b> Tap the glowing orb and talk freely about any language topic!</div></div>
     <div id="status">Tap orb to speak</div>
     <button id="orbBtn" class="live-orb" onclick="toggleListening()">🎙️</button>
   </div>
@@ -48,7 +49,7 @@
 </div>
 
 <script>
-  const SCRIPT_URL = "YOUR_NEW_APPS_SCRIPT_WEB_APP_URL_HERE"; // Put your actual deployment script URL here
+  const SCRIPT_URL = "YOUR_NEW_APPS_SCRIPT_WEB_APP_URL_HERE"; // Your Google Apps Script deployment URL
   let recognition;
   let isListening = false;
 
@@ -78,9 +79,7 @@
 
   function initSpeechRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      return;
-    }
+    if (!SpeechRecognition) return;
 
     recognition = new SpeechRecognition();
     recognition.lang = 'en-US';
@@ -127,15 +126,13 @@
 
   function startOrb() {
     isListening = true;
-    const btn = document.getElementById('orbBtn');
-    btn.classList.add('listening');
+    document.getElementById('orbBtn').classList.add('listening');
     document.getElementById('status').innerText = "Listening actively... Speak now!";
   }
 
   function stopOrb() {
     isListening = false;
-    const btn = document.getElementById('orbBtn');
-    btn.classList.remove('listening');
+    document.getElementById('orbBtn').classList.remove('listening');
     if (!document.getElementById('status').innerText.includes("Thinking")) {
       document.getElementById('status').innerText = "Tap orb to speak";
     }
@@ -143,7 +140,7 @@
 
   async function sendToBackend(text) {
     const chatBox = document.getElementById('chat-box');
-    chatBox.innerHTML += `<div><b>You:</b> ${text}</div>`;
+    chatBox.innerHTML += `<div style="margin: 6px 0;"><b style="color: #60a5fa;">You:</b> ${text}</div>`;
     chatBox.scrollTop = chatBox.scrollHeight;
     document.getElementById('status').innerText = "AI is thinking...";
 
@@ -168,17 +165,16 @@
         reply = JSON.stringify(data);
       }
       
-      chatBox.innerHTML += `<div><b>Tutor:</b> ${reply}</div>`;
+      chatBox.innerHTML += `<div style="margin: 6px 0;"><b style="color: #34d399;">AI:</b> ${reply}</div>`;
       chatBox.scrollTop = chatBox.scrollHeight;
       document.getElementById('status').innerText = "Tap orb to speak";
       
-      // Real-time voice synthesis response
       const speech = new SpeechSynthesisUtterance(reply);
       speech.rate = 1.0;
       window.speechSynthesis.speak(speech);
 
     } catch (err) {
-      chatBox.innerHTML += `<div><b>System:</b> Connection failed. Check network.</div>`;
+      chatBox.innerHTML += `<div style="color: #f87171;"><b>System:</b> Connection failed. Check network.</div>`;
       document.getElementById('status').innerText = "Tap orb to speak";
     }
   }
