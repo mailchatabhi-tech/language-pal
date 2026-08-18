@@ -1,111 +1,251 @@
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Language Pal Live by Raj Thakkar</title>
-  <title>Gemini Live Replica by Raj Thakkar</title>
 <style>
-    body { background: #0f172a; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding: 20px; color: #f8fafc; }
-    .card { background: #1e293b; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); display: inline-block; width: 100%; max-width: 450px; box-sizing: border-box; border: 1px solid #334155; }
-    input { padding: 12px; font-size: 16px; border-radius: 10px; border: 1px solid #475569; margin: 10px 0; width: 90%; box-sizing: border-box; background: #0f172a; color: white; }
-    body { background: #0b0f19; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding: 20px; color: #f8fafc; margin: 0; }
-    .card { background: #131b2e; padding: 25px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: inline-block; width: 100%; max-width: 450px; box-sizing: border-box; border: 1px solid #1e293b; }
-    input { padding: 14px; font-size: 16px; border-radius: 12px; border: 1px solid #334155; margin: 10px 0; width: 90%; box-sizing: border-box; background: #0b0f19; color: white; outline: none; }
-    input:focus { border-color: #3b82f6; }
-button { padding: 14px; font-size: 18px; border-radius: 12px; border: none; cursor: pointer; font-weight: bold; width: 90%; margin: 10px 0; background: #3b82f6; color: white; transition: background 0.2s; }
-button:hover { background: #2563eb; }
-    .link-btn { background: #2563eb; text-decoration: none; display: inline-block; color: white; border-radius: 10px; padding: 12px; font-weight: bold; width: 90%; box-sizing: border-box; margin-bottom: 10px; }
-    .link-btn { background: #2563eb; text-decoration: none; display: inline-block; color: white; border-radius: 12px; padding: 14px; font-weight: bold; width: 90%; box-sizing: border-box; margin-bottom: 10px; }
+body { background: #022c22; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding: 20px; color: #ecfdf5; margin: 0; }
+.card { background: #064e3b; padding: 25px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); display: inline-block; width: 100%; max-width: 450px; box-sizing: border-box; border: 1px solid #047857; }
+    input, select { padding: 14px; font-size: 16px; border-radius: 12px; border: 1px solid #059669; margin: 10px 0; width: 90%; box-sizing: border-box; background: #022c22; color: #ecfdf5; outline: none; }
+    input:focus, select:focus { border-color: #34d399; }
+    input { padding: 14px; font-size: 16px; border-radius: 12px; border: 1px solid #059669; margin: 10px 0; width: 90%; box-sizing: border-box; background: #022c22; color: #ecfdf5; outline: none; }
+    input:focus { border-color: #34d399; }
+button { padding: 14px; font-size: 18px; border-radius: 12px; border: none; cursor: pointer; font-weight: bold; width: 90%; margin: 10px 0; background: #059669; color: white; transition: background 0.2s; }
+button:hover { background: #047857; }
+.link-btn { background: #059669; text-decoration: none; display: inline-block; color: white; border-radius: 12px; padding: 14px; font-weight: bold; width: 90%; box-sizing: border-box; margin-bottom: 10px; }
 
-    /* Gemini Live Pulsing Orb */
-    .live-orb { width: 110px; height: 110px; background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899); border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center; font-size: 45px; color: white; cursor: pointer; border: none; box-shadow: 0 0 25px rgba(59, 130, 246, 0.5); }
-    .live-orb.listening { animation: livePulse 1.5s infinite; background: #ef4444; box-shadow: 0 0 30px rgba(239, 68, 68, 0.8); }
-    /* True Gemini Live Pulsing Orb */
-    .live-orb { width: 120px; height: 120px; background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899); border-radius: 50%; margin: 25px auto; display: flex; align-items: center; justify-content: center; font-size: 45px; color: white; cursor: pointer; border: none; box-shadow: 0 0 30px rgba(59, 130, 246, 0.4); transition: transform 0.2s; }
-    .live-orb.listening { animation: livePulse 1.5s infinite; background: #ef4444; box-shadow: 0 0 35px rgba(239, 68, 68, 0.8); }
+/* Green Glowing Live Orb */
+    .live-orb { width: 120px; height: 120px; background: linear-gradient(135deg, #059669, #34d399, #10b981); border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center; font-size: 45px; color: white; cursor: pointer; border: none; box-shadow: 0 0 30px rgba(52, 211, 153, 0.4); transition: transform 0.2s; }
+    .live-orb { width: 120px; height: 120px; background: linear-gradient(135deg, #059669, #34d399, #10b981); border-radius: 50%; margin: 25px auto; display: flex; align-items: center; justify-content: center; font-size: 45px; color: white; cursor: pointer; border: none; box-shadow: 0 0 30px rgba(52, 211, 153, 0.4); transition: transform 0.2s; }
+.live-orb.listening { animation: livePulse 1.5s infinite; background: #047857; box-shadow: 0 0 35px rgba(52, 211, 153, 0.9); }
 @keyframes livePulse {
-0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-      70% { transform: scale(1.1); box-shadow: 0 0 0 25px rgba(239, 68, 68, 0); }
-      70% { transform: scale(1.12); box-shadow: 0 0 0 25px rgba(239, 68, 68, 0); }
-100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); }
+70% { transform: scale(1.12); box-shadow: 0 0 0 25px rgba(52, 211, 153, 0); }
+100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
 }
 
-    #chat-box { height: 220px; border: 1px solid #475569; border-radius: 10px; overflow-y: auto; margin-bottom: 10px; padding: 10px; text-align: left; background: #0f172a; font-size: 14px; color: #e2e8f0; }
-    .branding { font-size: 18px; font-weight: bold; color: #f1f5f9; margin-top: 20px; letter-spacing: 0.5px; border-top: 1px solid #334155; padding-top: 12px; }
-    #status { font-weight: bold; color: #60a5fa; margin: 10px 0; font-size: 15px; }
-    #chat-box { height: 240px; border: 1px solid #1e293b; border-radius: 14px; overflow-y: auto; margin-bottom: 15px; padding: 12px; text-align: left; background: #0b0f19; font-size: 14px; color: #cbd5e1; }
-    
-    /* Prominent Large Branding for Raj Thakkar */
-    .branding { font-size: 22px; font-weight: 800; color: #38bdf8; margin-top: 25px; letter-spacing: 1px; border-top: 2px solid #1e293b; padding-top: 15px; text-transform: uppercase; text-shadow: 0 0 15px rgba(56, 189, 248, 0.4); }
-    
-    #status { font-weight: bold; color: #60a5fa; margin: 12px 0; font-size: 15px; }
+    #chat-box { height: 210px; border: 1px solid #047857; border-radius: 14px; overflow-y: auto; margin-bottom: 15px; padding: 12px; text-align: left; background: #022c22; font-size: 14px; color: #a7f3d0; }
+    #chat-box { height: 240px; border: 1px solid #047857; border-radius: 14px; overflow-y: auto; margin-bottom: 15px; padding: 12px; text-align: left; background: #022c22; font-size: 14px; color: #a7f3d0; }
+
+/* Prominent Large Branding for Raj Thakkar */
+    .branding { font-size: 24px; font-weight: 800; color: #34d399; margin-top: 20px; letter-spacing: 1.5px; border-top: 2px solid #047857; padding-top: 15px; text-transform: uppercase; text-shadow: 0 0 20px rgba(52, 211, 153, 0.5); }
+    .branding { font-size: 24px; font-weight: 800; color: #34d399; margin-top: 25px; letter-spacing: 1.5px; border-top: 2px solid #047857; padding-top: 15px; text-transform: uppercase; text-shadow: 0 0 20px rgba(52, 211, 153, 0.5); }
+
+    #status { font-weight: bold; color: #34d399; margin: 10px 0; font-size: 14px; }
+    #status { font-weight: bold; color: #34d399; margin: 12px 0; font-size: 15px; }
 </style>
 </head>
 <body>
-
-<div class="card">
-  <h2>🌍 Language Pal Live 🌍</h2>
-  <h2>✨ Gemini Live Core ✨</h2>
+@@ -36,33 +36,14 @@
+<h2>🌱 Anvaya Language Tutor 🌱</h2>
 
 <div id="setup-screen">
-<p style="font-size: 14px; color: #94a3b8;">Enter your email and paste your free Google API key:</p>
-<input type="email" id="parentEmail" placeholder="Your Email">
+    <p style="font-size: 14px; color: #a7f3d0;">Select target practice language:</p>
+    <select id="langSelect">
+      <option value="es-ES">Spanish (Español)</option>
+      <option value="fr-FR">French (Français)</option>
+      <option value="de-DE">German (Deutsch)</option>
+      <option value="hi-IN">Hindi (हिन्दी)</option>
+      <option value="ja-JP">Japanese (日本語)</option>
+      <option value="en-US">English</option>
+    </select>
+    <p style="font-size: 14px; color: #a7f3d0; margin-top: 10px;">Enter your Google API key:</p>
+    <p style="font-size: 14px; color: #a7f3d0;">Enter your Google API key to activate universal multi-language voice support:</p>
 <a href="https://aistudio.google.com/app/apikey" target="_blank" class="link-btn">1. Get Free Key from Google</a>
 <input type="password" id="apiKeyInput" placeholder="Paste your API key here">
-    <button onclick="saveKey()">2. Launch Live Session!</button>
-    <button onclick="saveKey()">2. Initialize Live Stream</button>
+    <button onclick="saveKey()">2. Start Live Tutor</button>
+    <button onclick="saveKey()">2. Start Universal Session</button>
 </div>
 
 <div id="app-screen" style="display:none;">
-    <div id="chat-box"><div><b>System:</b> Tap the glowing orb and talk freely about any language topic!</div></div>
-    <div id="chat-box"><div><b>System:</b> Live session initialized. Tap the glowing orb to speak freely.</div></div>
+    <div style="margin-bottom: 8px;">
+      <select id="activeLang" onchange="updateLanguage()" style="padding: 8px; font-size: 13px; width: 100%;">
+        <option value="es-ES">Spanish</option>
+        <option value="fr-FR">French</option>
+        <option value="de-DE">German</option>
+        <option value="hi-IN">Hindi</option>
+        <option value="ja-JP">Japanese</option>
+        <option value="en-US">English</option>
+      </select>
+    </div>
+    <div id="chat-box"><div><b>System:</b> Live session ready. Tap orb to speak.</div></div>
+    <div id="chat-box"><div><b>System:</b> Universal voice session active. Speak in any language.</div></div>
 <div id="status">Tap orb to speak</div>
 <button id="orbBtn" class="live-orb" onclick="toggleListening()">🎙️</button>
 </div>
-
-  <div class="branding">Created by Raj Thakkar</div>
-  <div class="branding">Raj Thakkar</div>
-</div>
-
-<script>
-  const SCRIPT_URL = "YOUR_NEW_APPS_SCRIPT_WEB_APP_URL_HERE"; // Your Google Apps Script deployment URL
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyTEVn6j5vqgsfWA2y4peYib5deA__cQLI2Z5KlXPeKwibwcJOz8vbLJYYkHbzcejU/exec"; 
+@@ -74,58 +55,49 @@ <h2>🌱 Anvaya Language Tutor 🌱</h2>
 let recognition;
 let isListening = false;
+let currentRequestController = null;
+  let targetLang = 'es-ES';
 
-@@ -140,16 +144,15 @@ <h2>🌍 Language Pal Live 🌍</h2>
+  // Complete multi-model fallback cascade queue
+  const MODEL_QUEUE = [
+    "gemini-3.5-flash",
+    "gemini-3.1-pro-preview",
+    "gemini-2.5-flash",
+    "gemini-2.5-pro"
+  ];
 
-async function sendToBackend(text) {
-const chatBox = document.getElementById('chat-box');
-    chatBox.innerHTML += `<div style="margin: 6px 0;"><b style="color: #60a5fa;">You:</b> ${text}</div>`;
-    chatBox.innerHTML += `<div style="margin: 8px 0;"><b style="color: #60a5fa;">You:</b> ${text}</div>`;
-chatBox.scrollTop = chatBox.scrollHeight;
-    document.getElementById('status').innerText = "AI is thinking...";
-    document.getElementById('status').innerText = "Gemini is thinking...";
+function saveKey() {
+const key = document.getElementById('apiKeyInput').value.trim();
+    targetLang = document.getElementById('langSelect').value;
+    
+if(!key) {
+alert("Please paste your API key first!");
+return;
+}
 
+localStorage.setItem('app_key', key);
+    localStorage.setItem('target_lang', targetLang);
+
+document.getElementById('setup-screen').style.display = 'none';
+document.getElementById('app-screen').style.display = 'block';
+    document.getElementById('activeLang').value = targetLang;
+initSpeechRecognition();
+}
+
+window.onload = function() {
+if(localStorage.getItem('app_key')) {
+document.getElementById('setup-screen').style.display = 'none';
+document.getElementById('app-screen').style.display = 'block';
+      targetLang = localStorage.getItem('target_lang') || 'es-ES';
+      document.getElementById('activeLang').value = targetLang;
+      initSpeechRecognition();
+    }
+  }
+
+  function updateLanguage() {
+    targetLang = document.getElementById('activeLang').value;
+    localStorage.setItem('target_lang', targetLang);
+    if (recognition) {
+      recognition.lang = targetLang;
+}
+    initSpeechRecognition();
+}
+
+function initSpeechRecognition() {
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (!SpeechRecognition) return;
+
+recognition = new SpeechRecognition();
+    recognition.lang = targetLang;
+    recognition.lang = navigator.language || 'en-US';
+recognition.interimResults = true;
+recognition.continuous = false;
+
+recognition.onresult = function(event) {
+const transcript = event.results[0][0].transcript;
+document.getElementById('status').innerText = "Hearing: " + transcript;
+if (event.results[0].isFinal) {
+        sendDirectToAPI(transcript);
+        sendWithModelFallback(transcript, recognition.lang);
+}
+};
+
+@@ -156,7 +128,6 @@ <h2>🌱 Anvaya Language Tutor 🌱</h2>
+stopOrb();
+} else {
 try {
-const response = await fetch(SCRIPT_URL, {
-method: 'POST',
-body: JSON.stringify({
-apiKey: localStorage.getItem('app_key'),
-          email: localStorage.getItem('parent_email') || "Unknown",
-message: text
-})
-});
-@@ -165,7 +168,7 @@ <h2>🌍 Language Pal Live 🌍</h2>
-reply = JSON.stringify(data);
+        recognition.lang = targetLang;
+recognition.start();
+startOrb();
+} catch (e) {
+@@ -180,57 +151,62 @@ <h2>🌱 Anvaya Language Tutor 🌱</h2>
+}
 }
 
-      chatBox.innerHTML += `<div style="margin: 6px 0;"><b style="color: #34d399;">AI:</b> ${reply}</div>`;
-      chatBox.innerHTML += `<div style="margin: 8px 0;"><b style="color: #34d399;">Gemini:</b> ${reply}</div>`;
+  async function sendDirectToAPI(text) {
+  async function sendWithModelFallback(text, detectedLang) {
+const chatBox = document.getElementById('chat-box');
+    chatBox.innerHTML += `<div style="margin: 6px 0;"><b style="color: #6ee7b7;">You:</b> ${text}</div>`;
+    chatBox.innerHTML += `<div style="margin: 8px 0;"><b style="color: #6ee7b7;">You:</b> ${text}</div>`;
 chatBox.scrollTop = chatBox.scrollHeight;
-document.getElementById('status').innerText = "Tap orb to speak";
+document.getElementById('status').innerText = "Anvaya is responding...";
 
-@@ -174,7 +177,7 @@ <h2>🌍 Language Pal Live 🌍</h2>
-window.speechSynthesis.speak(speech);
+const apiKey = localStorage.getItem('app_key');
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
-} catch (err) {
-      chatBox.innerHTML += `<div style="color: #f87171;"><b>System:</b> Connection failed. Check network.</div>`;
-      chatBox.innerHTML += `<div style="color: #f87171; margin: 8px 0;"><b>System:</b> Connection failed. Check network.</div>`;
-document.getElementById('status').innerText = "Tap orb to speak";
+currentRequestController = new AbortController();
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: currentRequestController.signal,
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `You are Anvaya, a fluid, instant, native-speaking multi-lingual conversation partner. Reply directly in target language code ${targetLang}. Keep your response ultra-short, natural, and conversational (max 1 short sentence). User said: ${text}`
+            }]
+          }]
+        })
+      });
+    let reply = "";
+    let success = false;
+
+      const data = await response.json();
+      
+      let reply = "";
+      if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts) {
+        reply = data.candidates[0].content.parts[0].text;
+      } else if (data.error) {
+        reply = "Error: " + (data.error.message || JSON.stringify(data.error));
+      } else {
+        reply = "¡Excelente! Continuemos.";
+      }
+      
+      chatBox.innerHTML += `<div style="margin: 6px 0;"><b style="color: #34d399;">Anvaya Tutor:</b> ${reply}</div>`;
+      chatBox.scrollTop = chatBox.scrollHeight;
+      document.getElementById('status').innerText = "Tap orb to speak";
+      
+      const speech = new SpeechSynthesisUtterance(reply);
+      speech.rate = 1.0;
+      speech.lang = targetLang;
+      window.speechSynthesis.speak(speech);
+
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        chatBox.innerHTML += `<div style="color: #f87171; margin: 6px 0;"><b>System:</b> Connection failed. Check network.</div>`;
+        document.getElementById('status').innerText = "Tap orb to speak";
+    // Loop through all backup models automatically if one fails or hits rate limits
+    for (let i = 0; i < MODEL_QUEUE.length; i++) {
+      const modelName = MODEL_QUEUE[i];
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: currentRequestController.signal,
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: `You are Anvaya, a fluid multi-lingual conversational partner. Detect the language of the user's input and reply naturally in that exact same language. Keep your response concise, conversational, and direct (max 1-2 short sentences). User input: ${text}`
+              }]
+            }]
+          })
+        });
+
+        const data = await response.json();
+        
+        if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts) {
+          reply = data.candidates[0].content.parts[0].text;
+          success = true;
+          break; // Exit loop successfully once a model answers
+        }
+      } catch (err) {
+        if (err.name === 'AbortError') return; // User cancelled/interrupted
+        // Continue to the next fallback model in the queue
 }
 }
+
+    if (!success || !reply) {
+      reply = "Let's keep chatting!";
+    }
+      
+    chatBox.innerHTML += `<div style="margin: 8px 0;"><b style="color: #34d399;">Anvaya Tutor:</b> ${reply}</div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+    document.getElementById('status').innerText = "Tap orb to speak";
+    
+    const speech = new SpeechSynthesisUtterance(reply);
+    speech.rate = 1.0;
+    speech.lang = detectedLang;
+    window.speechSynthesis.speak(speech);
+}
+</script>
