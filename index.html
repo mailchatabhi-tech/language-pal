@@ -12,7 +12,7 @@
     select option { background: #065f46; color: #ffffff; }
     button { padding: 14px; font-size: 16px; border-radius: 14px; border: none; cursor: pointer; font-weight: 600; width: 100%; margin: 10px 0; background: #10b981; color: white; transition: background 0.2s; }
     button:hover { background: #059669; }
-    .link-btn { background: #047857; text-decoration: none; display: inline-block; color: #a7f3d0; border-radius: 14px; padding: 12px; font-weight: 500; font-size: 14px; width: 100%; box-sizing: border-box; margin-bottom: 10px; border: 1px solid #047857; }
+    .link-btn { background: #047857; text-decoration: none; display: inline-block; color: #a7f3d0; border-radius: 14px; padding: 12px; font-weight: 500; font-size: 14px; width: 100%; box-sizing: border-box; margin-bottom: 10px; border: 1px solid #059669; }
     .link-btn:hover { color: #ffffff; background: #059669; }
 
     .live-orb { width: 120px; height: 120px; background: radial-gradient(circle, #34d399 0%, #10b981 50%, #059669 100%); border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; box-shadow: 0 0 40px rgba(52, 211, 153, 0.5); transition: transform 0.2s; position: relative; }
@@ -42,10 +42,7 @@
     
     <label style="font-size: 12px; color: #a7f3d0; display: block; text-align: left; margin-top: 5px;">Select Gemini Live Model:</label>
     <select id="modelSelect">
-      <option value="models/gemini-2.0-flash-exp">Gemini 2.0 Flash Exp (Working Baseline)</option>
-      <option value="models/gemini-2.0-flash">Gemini 2.0 Flash</option>
-      <option value="models/gemini-1.5-flash">Gemini 1.5 Flash</option>
-      <option value="models/gemini-1.5-pro">Gemini 1.5 Pro</option>
+      <option value="models/gemini-2.0-flash-exp">Gemini 2.0 Flash Exp (Multimodal Live)</option>
     </select>
 
     <button onclick="saveKey()">Start Live Session</button>
@@ -75,10 +72,9 @@
 
   function saveKey() {
     const key = document.getElementById('apiKeyInput').value.trim();
-    const model = document.getElementById('modelSelect').value;
     if(!key) { alert("Please paste your API key!"); return; }
     localStorage.setItem('anvaya_key', key);
-    localStorage.setItem('anvaya_model', model);
+    localStorage.setItem('anvaya_model', "models/gemini-2.0-flash-exp");
     document.getElementById('setup-screen').style.display = 'none';
     document.getElementById('app-screen').style.display = 'block';
   }
@@ -87,9 +83,6 @@
     if(localStorage.getItem('anvaya_key')) {
       document.getElementById('setup-screen').style.display = 'none';
       document.getElementById('app-screen').style.display = 'block';
-      if(localStorage.getItem('anvaya_model')) {
-        document.getElementById('modelSelect').value = localStorage.getItem('anvaya_model');
-      }
     }
   }
 
@@ -103,7 +96,6 @@
 
   async function startLiveSession() {
     const apiKey = localStorage.getItem('anvaya_key');
-    const selectedModel = localStorage.getItem('anvaya_model') || document.getElementById('modelSelect').value;
     if (!apiKey) return;
 
     document.getElementById('status').innerText = "Connecting...";
@@ -140,7 +132,7 @@
       
       const setupMessage = {
         setup: {
-          model: selectedModel,
+          model: "models/gemini-2.0-flash-exp",
           generationConfig: {
             responseModalities: ["AUDIO"],
             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } } }
@@ -185,7 +177,11 @@
 
     ws.onclose = (event) => {
       console.warn("WebSocket closed code:", event.code, "reason:", event.reason);
-      document.getElementById('status').innerText = event.code === 1000 ? "Ready" : `Closed by server (${event.code})`;
+      if (event.code === 1008) {
+        document.getElementById('status').innerText = "Error 1008: Policy Violation / Invalid API Key or Model.";
+      } else {
+        document.getElementById('status').innerText = event.code === 1000 ? "Ready" : `Closed by server (${event.code})`;
+      }
       stopLiveSession();
     };
   }
@@ -235,7 +231,7 @@
     
     const pcm16 = new Int16Array(bytes.buffer);
     const float32 = new Float32Array(pcm16.length);
-    for (let i = 0; i < pcm16.length; i++) { float32[i] = pcm16[i] / 32768.0; }
+    for (let i = 0; i < pcm16.length; i++) { float32[i] = pcm16.length[i] / 32768.0; }
 
     const audioBuffer = audioContext.createBuffer(1, float32.length, 24000);
     audioBuffer.getChannelData(0).set(float32);
@@ -268,8 +264,6 @@
 
     const orb = document.getElementById('orbBtn');
     if (orb) orb.classList.remove('active');
-    const status = document.getElementById('status');
-    if (status && status.innerText.includes("active")) status.innerText = "Ready";
   }
 </script>
 
