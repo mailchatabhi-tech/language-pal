@@ -40,13 +40,13 @@
     <a href="https://aistudio.google.com/app/apikey" target="_blank" class="link-btn">Get Free API Key</a>
     <input type="password" id="apiKeyInput" placeholder="AIzaSy...">
     
-    <label style="font-size: 12px; color: #a7f3d0; display: block; text-align: left; margin-top: 5px;">Select Model Version:</label>
+    <label style="font-size: 12px; color: #a7f3d0; display: block; text-align: left; margin-top: 5px;">Select Live Audio Model:</label>
     <select id="modelSelect">
-      <option value="gemini-2.0-flash">Gemini 2.0 Flash (Recommended Stable)</option>
-      <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash Exp</option>
+      <option value="models/gemini-2.0-flash-exp">Gemini 2.0 Flash Exp</option>
+      <option value="models/gemini-2.0-flash">Gemini 2.0 Flash</option>
     </select>
 
-    <button onclick="saveKey()">Start Live Session</button>
+    <button onclick="saveKey()">Save & Start Session</button>
   </div>
 
   <div id="app-screen" style="display:none;">
@@ -57,6 +57,7 @@
         <path d="M12 2C11.45 2 11 2.45 11 3V5C11 5.55 11.45 6 12 6C12.55 6 13 5.55 13 5V3C13 2.45 12.55 2 12 2ZM19 11C19 14.53 16.39 17.44 13 17.93V20H15C15.55 20 16 20.45 16 21C16 21.55 15.55 22 15 22H9C8.45 22 8 21.55 8 21C8 20.45 8.45 20 9 20H11V17.93C7.61 17.44 5 14.53 5 11C5 10.45 5.45 10 6 10C6.55 10 7 10.45 7 11C7 13.76 9.24 16 12 16C14.76 16 17 13.76 17 11C17 10.45 17.45 10 18 10C18.55 10 19 10.45 19 11ZM12 14C10.34 14 9 12.66 9 11V6C9 4.34 10.34 3 12 3C13.66 3 15 4.34 15 6V11C15 12.66 13.66 14 12 14Z" fill="white"/>
       </svg>
     </button>
+    <button onclick="resetKey()" style="background:#047857; font-size:13px; padding:10px; margin-top:10px;">Change API Key / Settings</button>
   </div>
 
   <div class="branding-bottom">Powered by Raj Thakkar</div>
@@ -71,20 +72,47 @@
   let isConnected = false;
   let nextPlayTime = 0;
 
+  // Simple Base64 Obfuscation layer (client-side masking against plain inspection)
+  function encryptKey(plainText) {
+    return btoa(encodeURIComponent(plainText));
+  }
+
+  function decryptKey(encodedText) {
+    try {
+      return decodeURIComponent(atob(encodedText));
+    } catch (e) {
+      return encodedText; // Fallback if unencrypted legacy string
+    }
+  }
+
   function saveKey() {
-    const key = document.getElementById('apiKeyInput').value.trim();
+    const rawKey = document.getElementById('apiKeyInput').value.trim();
     const model = document.getElementById('modelSelect').value;
-    if(!key) { alert("Please paste your API key!"); return; }
-    localStorage.setItem('anvaya_key', key);
+    if(!rawKey) { alert("Please paste your API key!"); return; }
+    
+    localStorage.setItem('anvaya_enc_key', encryptKey(rawKey));
     localStorage.setItem('anvaya_model', model);
+    
     document.getElementById('setup-screen').style.display = 'none';
     document.getElementById('app-screen').style.display = 'block';
   }
 
+  function resetKey() {
+    stopLiveSession();
+    localStorage.removeItem('anvaya_enc_key');
+    document.getElementById('apiKeyInput').value = '';
+    document.getElementById('app-screen').style.display = 'none';
+    document.getElementById('setup-screen').style.display = 'block';
+  }
+
   window.onload = function() {
-    if(localStorage.getItem('anvaya_key')) {
+    const storedEncKey = localStorage.getItem('anvaya_enc_key');
+    if(storedEncKey) {
       document.getElementById('setup-screen').style.display = 'none';
       document.getElementById('app-screen').style.display = 'block';
+      if(localStorage.getItem('anvaya_model')) {
+        document.getElementById('modelSelect').value = localStorage.getItem('anvaya_model');
+      }
     }
   }
 
@@ -97,9 +125,14 @@
   }
 
   async function startLiveSession() {
-    const apiKey = localStorage.getItem('anvaya_key');
-    const selectedModel = localStorage.getItem('anvaya_model') || 'gemini-2.0-flash';
-    if (!apiKey) return;
+    const storedEncKey = localStorage.getItem('anvaya_enc_key');
+    const apiKey = storedEncKey ? decryptKey(storedEncKey) : '';
+    const selectedModel = localStorage.getItem('anvaya_model') || 'models/gemini-2.0-flash-exp';
+    
+    if (!apiKey) {
+      resetKey();
+      return;
+    }
 
     document.getElementById('status').innerText = "Connecting...";
 
@@ -124,8 +157,6 @@
       return;
     }
 
-    // Using the correct model name format prefixed with 'models/' if needed, or exact model string
-    const modelPath = selectedModel.startsWith('models/') ? selectedModel : `models/${selectedModel}`;
     const url = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${apiKey}`;
     ws = new WebSocket(url);
 
@@ -137,7 +168,7 @@
       
       const setupMessage = {
         setup: {
-          model: modelPath,
+          model: selectedModel,
           generationConfig: {
             responseModalities: ["AUDIO"],
             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } } }
@@ -183,7 +214,7 @@
     ws.onclose = (event) => {
       console.warn("WebSocket closed code:", event.code, "reason:", event.reason);
       if (event.code === 1008) {
-        document.getElementById('status').innerText = "Error 1008: Policy Violation. Please check if your Google AI Studio API key has permissions enabled for Live API / Gemini 2.0 models or try creating a fresh key.";
+        document.getElementById('status').innerText = "Error 1008: Policy/Auth Violation. Please verify your API key permissions in AI Studio or click 'Change API Key' to re-enter a fresh key.";
       } else {
         document.getElementById('status').innerText = event.code === 1000 ? "Ready" : `Closed by server (${event.code})`;
       }
@@ -269,6 +300,8 @@
 
     const orb = document.getElementById('orbBtn');
     if (orb) orb.classList.remove('active');
+    const status = document.getElementById('status');
+    if (status && status.innerText.includes("active")) status.innerText = "Ready";
   }
 </script>
 
