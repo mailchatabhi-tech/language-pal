@@ -44,7 +44,7 @@
   </div>
 
   <div id="app-screen" style="display:none;">
-    <div id="chat-box"><div><b>System:</b> Anvaya session initialized via Gemini 3.6 Flash. Tap the orb to speak.</div></div>
+    <div id="chat-box"><div><b>System:</b> Anvaya session active. Tap the orb to speak.</div></div>
     <div id="status">Tap orb to speak</div>
     <button id="orbBtn" class="live-orb" onclick="toggleListening()">🎙️</button>
   </div>
@@ -53,9 +53,9 @@
 </div>
 
 <script>
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyTEVn6j5vqgsfWA2y4peYib5deA__cQLI2Z5KlXPeKwibwcJOz8vbLJYYkHbzcejU/exec"; 
   let recognition;
   let isListening = false;
+  let currentRequestController = null;
 
   function saveKey() {
     const key = document.getElementById('apiKeyInput').value.trim();
@@ -94,7 +94,7 @@
       const transcript = event.results[0][0].transcript;
       document.getElementById('status').innerText = "Hearing: " + transcript;
       if (event.results[0].isFinal) {
-        sendToBackend(transcript);
+        sendDirectToAPI(transcript);
       }
     };
 
@@ -109,6 +109,13 @@
   }
 
   function toggleListening() {
+    // INSTANTLY CUT OFF ANY ONGOING SPEECH OR REQUEST WHEN USER CLICKS TO SPEAK
+    window.speechSynthesis.cancel();
+    if (currentRequestController) {
+      currentRequestController.abort();
+      currentRequestController = null;
+    }
+
     if (!recognition) {
       alert("Speech recognition is not supported in this browser. Please use Google Chrome.");
       return;
@@ -137,23 +144,33 @@
   function stopOrb() {
     isListening = false;
     document.getElementById('orbBtn').classList.remove('listening');
-    if (!document.getElementById('status').innerText.includes("Thinking")) {
+    if (!document.getElementById('status').innerText.includes("Speaking")) {
       document.getElementById('status').innerText = "Tap orb to speak";
     }
   }
 
-  async function sendToBackend(text) {
+  async function sendDirectToAPI(text) {
     const chatBox = document.getElementById('chat-box');
     chatBox.innerHTML += `<div style="margin: 8px 0;"><b style="color: #6ee7b7;">You:</b> ${text}</div>`;
     chatBox.scrollTop = chatBox.scrollHeight;
-    document.getElementById('status').innerText = "Anvaya is thinking...";
+    document.getElementById('status').innerText = "Anvaya is responding...";
+
+    const apiKey = localStorage.getItem('app_key');
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+    currentRequestController = new AbortController();
 
     try {
-      const response = await fetch(SCRIPT_URL, {
+      const response = await fetch(endpoint, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: currentRequestController.signal,
         body: JSON.stringify({
-          apiKey: localStorage.getItem('app_key'),
-          message: text
+          contents: [{
+            parts: [{
+              text: "You are Anvaya, a strict one-to-one language tutor. Keep your response extremely brief, natural, conversational, and limited to 1 or 2 short sentences max. Do not lecture or dump information. User message: " + text
+            }]
+          }]
         })
       });
 
@@ -163,9 +180,9 @@
       if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts) {
         reply = data.candidates[0].content.parts[0].text;
       } else if (data.error) {
-        reply = "API Error: " + (data.error.message || JSON.stringify(data.error));
+        reply = "Error: " + (data.error.message || JSON.stringify(data.error));
       } else {
-        reply = JSON.stringify(data);
+        reply = "Could not parse response.";
       }
       
       chatBox.innerHTML += `<div style="margin: 8px 0;"><b style="color: #34d399;">Anvaya Tutor:</b> ${reply}</div>`;
@@ -177,8 +194,10 @@
       window.speechSynthesis.speak(speech);
 
     } catch (err) {
-      chatBox.innerHTML += `<div style="color: #f87171; margin: 8px 0;"><b>System:</b> Connection failed. Check network.</div>`;
-      document.getElementById('status').innerText = "Tap orb to speak";
+      if (err.name !== 'AbortError') {
+        chatBox.innerHTML += `<div style="color: #f87171; margin: 8px 0;"><b>System:</b> Connection failed. Check network.</div>`;
+        document.getElementById('status').innerText = "Tap orb to speak";
+      }
     }
   }
 </script>
