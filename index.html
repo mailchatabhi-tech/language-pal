@@ -57,6 +57,7 @@
   let isConnected = false;
   let audioQueue = [];
   let isPlaying = false;
+  let gainNode = null;
 
   function saveKey() {
     const key = document.getElementById('apiKeyInput').value.trim();
@@ -92,6 +93,11 @@
       if (audioContext.state === 'suspended') {
         await audioContext.resume();
       }
+
+      // Create Volume Boost Gain Node (Amplifies speech output x2.5)
+      gainNode = audioContext.createGain();
+      gainNode.gain.value = 2.5; 
+      gainNode.connect(audioContext.destination);
 
       mediaStream = await navigator.mediaDevices.getUserMedia({ 
         audio: { channelCount: 1, sampleRate: 16000, echoCancellation: true, noiseSuppression: true } 
@@ -161,7 +167,7 @@
 
   function startAudioProcessing() {
     const source = audioContext.createMediaStreamSource(mediaStream);
-    scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
+    scriptProcessor = audioContext.createScriptProcessor(2048, 1, 1);
 
     scriptProcessor.onaudioprocess = (e) => {
       if (!isConnected || !ws || ws.readyState !== WebSocket.OPEN) return;
@@ -211,7 +217,10 @@
 
     const source = audioContext.createBufferSource();
     source.buffer = buffer;
-    source.connect(audioContext.destination);
+    
+    // Route through the volume gain node for clear high output
+    source.connect(gainNode);
+    
     source.onended = () => playQueue();
     source.start();
   }
