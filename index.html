@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Language Pal by Raj</title>
+  <style>
+    body { background: #f0f8ff; font-family: 'Comic Sans MS', cursive, sans-serif; text-align: center; padding: 20px; }
+    .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: inline-block; width: 100%; max-width: 400px; box-sizing: border-box; }
+    input { padding: 12px; font-size: 16px; border-radius: 10px; border: 2px solid #ccc; margin: 10px 0; width: 90%; box-sizing: border-box; }
+    button { padding: 12px; font-size: 16px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; width: 90%; margin: 10px 0; background: #ff7f50; color: white; }
+    .link-btn { background: #4285F4; text-decoration: none; display: inline-block; color: white; border-radius: 10px; padding: 12px; font-weight: bold; width: 90%; box-sizing: border-box; margin-bottom: 10px; }
+    
+    /* Seamless Live Pulse Orb */
+    .live-orb { width: 100px; height: 100px; background: #4CAF50; border-radius: 50%; margin: 25px auto; display: flex; align-items: center; justify-content: center; font-size: 40px; color: white; box-shadow: 0 0 0 rgba(76, 175, 80, 0.4); animation: pulse 2s infinite; }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
+      70% { box-shadow: 0 0 0 25px rgba(76, 175, 80, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+    }
+
+    #chat-box { height: 160px; border: 2px dashed #add8e6; border-radius: 10px; overflow-y: auto; margin-bottom: 10px; padding: 10px; text-align: left; background: #fffaf0; font-size: 14px; }
+    .branding { font-size: 13px; color: #888; margin-top: 15px; }
+    #status { font-weight: bold; color: #4CAF50; margin: 10px 0; font-size: 15px; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h2>🌟 Language Pal 🌟</h2>
+  <p style="font-size: 14px; color: #555; margin-top: -10px;">by Raj</p>
+  
+  <!-- Setup Screen -->
+  <div id="setup-screen">
+    <p style="font-size: 14px;">Enter your email and paste your free Google API key to launch live voice:</p>
+    <input type="email" id="parentEmail" placeholder="Parent's Email">
+    <a href="https://aistudio.google.com/app/apikey" target="_blank" class="link-btn">1. Get Free Key from Google</a>
+    <input type="password" id="apiKeyInput" placeholder="Paste your API key here">
+    <button onclick="initLiveSession()">2. Start Live Voice App!</button>
+  </div>
+
+  <!-- Main Live Screen -->
+  <div id="app-screen" style="display:none;">
+    <div id="chat-box"><div><b>System:</b> Connected to Live Session. Start talking! 🌍</div></div>
+    <div id="status">Listening... Speak naturally</div>
+    <div class="live-orb" id="orb">🎙️</div>
+    <button onclick="disconnectLive()" style="background: #e53935; font-size: 13px; padding: 8px; width: auto;">End Session</button>
+  </div>
+
+  <div class="branding">Powered by Raj Thakkar</div>
+</div>
+
+<script>
+  let ws = null;
+  let audioContext = null;
+
+  function initLiveSession() {
+    const key = document.getElementById('apiKeyInput').value.trim();
+    const email = document.getElementById('parentEmail').value.trim();
+    
+    if(!key) {
+      alert("Please paste your API key first!");
+      return;
+    }
+
+    localStorage.setItem('app_key', key);
+    if(email) localStorage.setItem('parent_email', email);
+
+    document.getElementById('setup-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'block';
+
+    connectWebSocket(key);
+  }
+
+  window.onload = function() {
+    const savedKey = localStorage.getItem('app_key');
+    if(savedKey) {
+      document.getElementById('setup-screen').style.display = 'none';
+      document.getElementById('app-screen').style.display = 'block';
+      connectWebSocket(savedKey);
+    }
+  }
+
+  async function connectWebSocket(apiKey) {
+    const endpoint = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${apiKey}`;
+    
+    ws = new WebSocket(endpoint);
+
+    ws.onopen = () => {
+      document.getElementById('status').innerText = "Live connection active! Say hello.";
+      
+      // Send initial setup payload defining Pingo's strict language persona
+      const setupMessage = {
+        setup: {
+          model: "models/gemini-2.5-flash",
+          generationConfig: {
+            responseModalities: ["AUDIO"],
+            speechConfig: {
+              voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } }
+            }
+          },
+          systemInstruction: {
+            parts: [{ text: "You are a cheerful, strict language-learning tutor mascot for kids named Pingo. You ONLY teach languages (words, vocabulary, pronunciation). Keep sentences short and conversational. If asked about anything else, politely steer them back to language learning." }]
+          }
+        }
+      };
+      ws.send(JSON.stringify(setupMessage));
+      startMicrophoneStream();
+    };
+
+    ws.onmessage = async (event) => {
+      let responseText = event.data;
+      if (textData instanceof Blob) {
+        responseText = await textData.text();
+      }
+      
+      try {
+        const response = JSON.parse(responseText);
+        if (response.serverContent && response.serverContent.modelTurn) {
+          const parts = response.serverContent.modelTurn.parts;
+          for (let p of parts) {
+            if (p.text) {
+              appendChat("Pingo", p.text);
+            }
+            // Play raw audio bytes sent natively from model
+            if (p.inlineData && p.inlineData.data) {
+              playAudioChunk(p.inlineData.data);
+            }
+          }
+        }
+      } catch (e) {
+        console.log("Parsing stream event...");
+      }
+    };
+
+    ws.onerror = (err) => {
+      document.getElementById('status').innerText = "Connection error. Check your key.";
+    };
+
+    ws.onclose = () => {
+      document.getElementById('status').innerText = "Session closed.";
+    };
+  }
+
+  async function startMicrophoneStream() {
+    try {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, sampleRate: 16000 } });
+      const source = audioContext.createMediaStreamSource(stream);
+      const processor = audioContext.createScriptProcessor(4096, 1, 1);
+
+      processor.onaudioprocess = (e) => {
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        const inputData = e.inputBuffer.getChannelData(0);
+        
+        // Convert audio to 16-bit PCM base64 chunks required by Live API
+        const pcm16 = new Int16Array(inputData.length);
+        for (let i = 0; i < inputData.length; i++) {
+          pcm16[i] = inputData[i] * 0x7FFF;
+        }
+        const base64Data = btoa(String.fromCharCode.apply(null, new Uint8Array(pcm16.buffer)));
+
+        const realtimeMsg = {
+          realtimeInput: {
+            mediaChunks: [{
+              mimeType: "audio/pcm",
+              data: base64Data
+            }]
+          }
+        };
+        ws.send(JSON.stringify(realtimeMsg));
+      };
+
+      source.connect(processor);
+      processor.connect(audioContext.destination);
+    } catch (err) {
+      alert("Microphone access denied or unsupported on this device browser.");
+    }
+  }
+
+  function playAudioChunk(base64Data) {
+    // Basic handler for incoming audio stream playback
+    const binaryString = atob(base64Data);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    
+    if(!audioContext) return;
+    audioContext.decodeAudioData(bytes.buffer).then(buffer => {
+      const source = audioContext.createBufferSource();
+      source.buffer = buffer;
+      source.connect(audioContext.destination);
+      source.start(0);
+    }).catch(e => {});
+  }
+
+  function appendChat(sender, text) {
+    const chatBox = document.getElementById('chat-box');
+    chatBox.innerHTML += `<div><b>${sender}:</b> ${text}</div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  function disconnectLive() {
+    if (ws) ws.close();
+    localStorage.removeItem('app_key');
+    location.reload();
+  }
+</script>
+
+</body>
+</html>
