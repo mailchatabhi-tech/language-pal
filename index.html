@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Anvaya Live by Raj Thakkar</title>
+  <title>Anvaya by Raj Thakkar</title>
   <style>
     body { background: #022c22; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding: 20px; color: #ecfdf5; margin: 0; }
     .card { background: #064e3b; padding: 25px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); display: inline-block; width: 100%; max-width: 450px; box-sizing: border-box; border: 1px solid #047857; }
@@ -13,7 +13,6 @@
     button:hover { background: #047857; }
     .link-btn { background: #059669; text-decoration: none; display: inline-block; color: white; border-radius: 12px; padding: 14px; font-weight: bold; width: 90%; box-sizing: border-box; margin-bottom: 10px; }
     
-    /* Glowing Live Audio Orb */
     .live-orb { width: 130px; height: 130px; background: linear-gradient(135deg, #059669, #34d399, #10b981); border-radius: 50%; margin: 25px auto; display: flex; align-items: center; justify-content: center; font-size: 45px; color: white; cursor: pointer; border: none; box-shadow: 0 0 30px rgba(52, 211, 153, 0.4); transition: transform 0.2s; }
     .live-orb.active { animation: livePulse 1.5s infinite; background: #047857; box-shadow: 0 0 40px rgba(52, 211, 153, 0.9); }
     @keyframes livePulse {
@@ -26,7 +25,6 @@
     
     .branding-top { font-size: 18px; font-weight: 700; color: #34d399; margin-bottom: 15px; letter-spacing: 1px; text-transform: uppercase; }
     .branding-bottom { font-size: 15px; font-weight: 700; color: #34d399; margin-top: 20px; letter-spacing: 1px; border-top: 2px solid #047857; padding-top: 15px; text-transform: uppercase; text-shadow: 0 0 15px rgba(52, 211, 153, 0.4); }
-    
     #status { font-weight: bold; color: #34d399; margin: 10px 0; font-size: 14px; }
   </style>
 </head>
@@ -36,15 +34,15 @@
   <div class="branding-top">Anvaya by Raj Thakkar</div>
   
   <div id="setup-screen">
-    <p style="font-size: 14px; color: #a7f3d0;">Enter your Google API key to open direct Gemini Live WebSocket stream:</p>
+    <p style="font-size: 14px; color: #a7f3d0;">Enter your Google API key to establish connection:</p>
     <a href="https://aistudio.google.com/app/apikey" target="_blank" class="link-btn">1. Get Free Key from Google</a>
     <input type="password" id="apiKeyInput" placeholder="Paste your API key here">
-    <button onclick="saveKey()">2. Launch Live Stream</button>
+    <button onclick="saveKey()">2. Launch Anvaya Live</button>
   </div>
 
   <div id="app-screen" style="display:none;">
-    <div id="chat-box"><div><b>System:</b> Connected. Say "Hello Anvaya" to begin.</div></div>
-    <div id="status">Tap orb to start Live session</div>
+    <div id="chat-box"><div><b>System:</b> Ready. Tap the orb and speak.</div></div>
+    <div id="status">Tap orb to start</div>
     <button id="orbBtn" class="live-orb" onclick="toggleLiveSession()">🎙️</button>
   </div>
 
@@ -55,23 +53,21 @@
   let ws = null;
   let audioContext = null;
   let mediaStream = null;
-  let processor = null;
+  let scriptProcessor = null;
   let isConnected = false;
-  let nextAudioTime = 0;
+  let audioQueue = [];
+  let isPlaying = false;
 
   function saveKey() {
     const key = document.getElementById('apiKeyInput').value.trim();
-    if(!key) {
-      alert("Please paste your API key first!");
-      return;
-    }
-    localStorage.setItem('app_key', key);
+    if(!key) { alert("Please paste your API key!"); return; }
+    localStorage.setItem('anvaya_key', key);
     document.getElementById('setup-screen').style.display = 'none';
     document.getElementById('app-screen').style.display = 'block';
   }
 
   window.onload = function() {
-    if(localStorage.getItem('app_key')) {
+    if(localStorage.getItem('anvaya_key')) {
       document.getElementById('setup-screen').style.display = 'none';
       document.getElementById('app-screen').style.display = 'block';
     }
@@ -86,49 +82,76 @@
   }
 
   async function startLiveSession() {
-    const apiKey = localStorage.getItem('app_key');
+    const apiKey = localStorage.getItem('anvaya_key');
     if (!apiKey) return;
 
-    document.getElementById('status').innerText = "Connecting to Gemini Live...";
-    
+    document.getElementById('status').innerText = "Connecting...";
+
+    try {
+      // Initialize Audio Context prior to WebSocket to satisfy browser user-gesture requirements
+      audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
+
+      mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        audio: { channelCount: 1, sampleRate: 16000, echoCancellation: true, noiseSuppression: true } 
+      });
+    } catch (err) {
+      document.getElementById('status').innerText = "Mic permission denied!";
+      return;
+    }
+
     const url = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${apiKey}`;
     ws = new WebSocket(url);
 
-    ws.onopen = async () => {
+    ws.onopen = () => {
       isConnected = true;
       document.getElementById('orbBtn').classList.add('active');
-      document.getElementById('status').innerText = "Live! Say 'Hello Anvaya'...";
+      document.getElementById('status').innerText = "Anvaya Live Active. Speak freely.";
       
       const setupMessage = {
         setup: {
-          model: "models/gemini-3.1-flash-live-preview",
+          model: "models/gemini-2.5-flash-native-audio-latest",
           generationConfig: {
             responseModalities: ["AUDIO"],
-            speechConfig: {
-              voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } }
-            }
+            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } } }
           },
           systemInstruction: {
-            parts: [{ text: "You are Anvaya, a fluid, instant, native-speaking multi-lingual conversation partner built by Raj Thakkar. Listen closely to the user, match their exact language immediately, and respond naturally." }]
+            parts: [{ text: "You are Anvaya, an instant, fluid conversational partner built by Raj Thakkar. Reply directly, naturally, and match the user's language instantly." }]
           }
         }
       };
       ws.send(JSON.stringify(setupMessage));
-      await startMicrophoneStream();
+      startAudioProcessing();
     };
 
     ws.onmessage = async (event) => {
       try {
-        const textData = event.data instanceof Blob ? await event.data.text() : event.data;
-        handleServerMessage(JSON.parse(textData));
+        const text = event.data instanceof Blob ? await event.data.text() : event.data;
+        const response = JSON.parse(text);
+        
+        if (response.serverContent && response.serverContent.modelTurn) {
+          const parts = response.serverContent.modelTurn.parts;
+          for (const part of parts) {
+            if (part.text) {
+              const box = document.getElementById('chat-box');
+              box.innerHTML += `<div style="margin: 4px 0;"><b style="color:#34d399;">Anvaya:</b> ${part.text}</div>`;
+              box.scrollTop = box.scrollHeight;
+            }
+            if (part.inlineData && part.inlineData.data) {
+              enqueueAudio(part.inlineData.data);
+            }
+          }
+        }
       } catch (e) {
-        console.error("Parsing error", e);
+        console.error("Message parse error", e);
       }
     };
 
-    ws.onerror = (err) => {
-      console.error("WebSocket error:", err);
-      document.getElementById('status').innerText = "Connection error. Check console.";
+    ws.onerror = (e) => {
+      console.error("WS Error", e);
+      document.getElementById('status').innerText = "Connection error.";
       stopLiveSession();
     };
 
@@ -137,122 +160,77 @@
     };
   }
 
-  async function startMicrophoneStream() {
-    try {
-      mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        audio: { 
-          channelCount: 1, 
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        } 
-      });
+  function startAudioProcessing() {
+    const source = audioContext.createMediaStreamSource(mediaStream);
+    scriptProcessor = audioContext.createScriptProcessor(2048, 1, 1);
+
+    scriptProcessor.onaudioprocess = (e) => {
+      if (!isConnected || !ws || ws.readyState !== WebSocket.OPEN) return;
       
-      audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const source = audioContext.createMediaStreamSource(mediaStream);
-      processor = audioContext.createScriptProcessor(4096, 1, 1);
-
-      processor.onaudioprocess = (e) => {
-        if (!isConnected || !ws || ws.readyState !== WebSocket.OPEN) return;
-        
-        const inputData = e.inputBuffer.getChannelData(0);
-        const inputSampleRate = audioContext.sampleRate;
-        const targetSampleRate = 16000;
-        
-        // Simple downsampling to 16kHz to guarantee proper transmission
-        let downsampledData = inputData;
-        if (inputSampleRate !== targetSampleRate) {
-          const ratio = inputSampleRate / targetSampleRate;
-          const newLength = Math.round(inputData.length / ratio);
-          downsampledData = new Float32Array(newLength);
-          for (let i = 0; i < newLength; i++) {
-            downsampledData[i] = inputData[Math.floor(i * ratio)];
-          }
-        }
-
-        // Convert Float32Array to 16-bit PCM little-endian
-        const pcm16 = new Int16Array(downsampledData.length);
-        for (let i = 0; i < downsampledData.length; i++) {
-          let s = Math.max(-1, Math.min(1, downsampledData[i]));
-          pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-        }
-        
-        const base64Audio = btoa(String.fromCharCode.apply(null, new Uint8Array(pcm16.buffer)));
-        
-        ws.send(JSON.stringify({
-          realtimeInput: {
-            mediaChunks: [{ mimeType: "audio/pcm;rate=16000", data: base64Audio }]
-          }
-        }));
-      };
-
-      source.connect(processor);
-      processor.connect(audioContext.destination);
-    } catch (err) {
-      console.error("Mic error:", err);
-      document.getElementById('status').innerText = "Microphone error. Check permissions.";
-      stopLiveSession();
-    }
-  }
-
-  function handleServerMessage(response) {
-    const chatBox = document.getElementById('chat-box');
-
-    if (response.serverContent && response.serverContent.modelTurn) {
-      const parts = response.serverContent.modelTurn.parts;
-      for (const part of parts) {
-        if (part.text) {
-          chatBox.innerHTML += `<div style="margin: 6px 0;"><b style="color: #34d399;">Anvaya:</b> ${part.text}</div>`;
-          chatBox.scrollTop = chatBox.scrollHeight;
-        }
-        if (part.inlineData && part.inlineData.data) {
-          playAudioChunk(part.inlineData.data);
-        }
+      const inputData = e.inputBuffer.getChannelData(0);
+      const pcm16 = new Int16Array(inputData.length);
+      for (let i = 0; i < inputData.length; i++) {
+        let s = Math.max(-1, Math.min(1, inputData[i]));
+        pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
       }
-    }
+
+      const base64Data = btoa(String.fromCharCode.apply(null, new Uint8Array(pcm16.buffer)));
+      ws.send(JSON.stringify({
+        realtimeInput: {
+          mediaChunks: [{ mimeType: "audio/pcm;rate=16000", data: base64Data }]
+        }
+      }));
+    };
+
+    source.connect(scriptProcessor);
+    scriptProcessor.connect(audioContext.destination);
   }
 
-  function playAudioChunk(base64Audio) {
-    if (!audioContext) return;
+  function enqueueAudio(base64Data) {
+    const binary = atob(base64Data);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) { bytes[i] = binary.charCodeAt(i); }
     
-    const binaryString = atob(base64Audio);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-
     const pcm16 = new Int16Array(bytes.buffer);
     const float32 = new Float32Array(pcm16.length);
-    for (let i = 0; i < pcm16.length; i++) {
-      float32[i] = pcm16[i] / 32768.0;
-    }
+    for (let i = 0; i < pcm16.length; i++) { float32[i] = pcm16[i] / 32768.0; }
 
-    const audioBuffer = audioContext.createBuffer(1, float32.length, 24000);
-    audioBuffer.getChannelData(0).set(float32);
+    audioQueue.push(float32);
+    if (!isPlaying) { playQueue(); }
+  }
+
+  function playQueue() {
+    if (audioQueue.length === 0) {
+      isPlaying = false;
+      return;
+    }
+    isPlaying = true;
+    const float32 = audioQueue.shift();
+
+    const buffer = audioContext.createBuffer(1, float32.length, 24000);
+    buffer.getChannelData(0).set(float32);
 
     const source = audioContext.createBufferSource();
-    source.buffer = audioBuffer;
+    source.buffer = buffer;
     source.connect(audioContext.destination);
-
-    const currentTime = audioContext.currentTime;
-    if (nextAudioTime < currentTime) {
-      nextAudioTime = currentTime;
-    }
-    source.start(nextAudioTime);
-    nextAudioTime += audioBuffer.duration;
+    source.onended = () => playQueue();
+    source.start();
   }
 
   function stopLiveSession() {
     isConnected = false;
+    isPlaying = false;
+    audioQueue = [];
+
+    if (scriptProcessor) { scriptProcessor.disconnect(); scriptProcessor = null; }
+    if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
     if (ws) { ws.close(); ws = null; }
-    if (processor) { processor.disconnect(); processor = null; }
-    if (mediaStream) { mediaStream.getTracks().forEach(track => track.stop()); mediaStream = null; }
-    if (audioContext) { audioContext.close(); audioContext = null; }
+    if (audioContext && audioContext.state !== 'closed') { audioContext.close(); audioContext = null; }
 
     const orb = document.getElementById('orbBtn');
     if (orb) orb.classList.remove('active');
     const status = document.getElementById('status');
-    if (status) status.innerText = "Tap orb to start Live session";
+    if (status) status.innerText = "Tap orb to start";
   }
 </script>
 
