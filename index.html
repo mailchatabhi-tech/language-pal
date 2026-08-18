@@ -3,44 +3,46 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Language Pal by Raj</title>
+  <title>Language Pal by Raj Thakkar</title>
   <style>
-    body { background: #f0f8ff; font-family: 'Comic Sans MS', cursive, sans-serif; text-align: center; padding: 20px; }
-    .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: inline-block; width: 100%; max-width: 400px; box-sizing: border-box; }
+    body { background: #f0f8ff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding: 20px; }
+    .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: inline-block; width: 100%; max-width: 450px; box-sizing: border-box; }
     input { padding: 12px; font-size: 16px; border-radius: 10px; border: 2px solid #ccc; margin: 10px 0; width: 90%; box-sizing: border-box; }
     button { padding: 14px; font-size: 18px; border-radius: 12px; border: none; cursor: pointer; font-weight: bold; width: 90%; margin: 10px 0; background: #ff7f50; color: white; }
     .link-btn { background: #4285F4; text-decoration: none; display: inline-block; color: white; border-radius: 10px; padding: 12px; font-weight: bold; width: 90%; box-sizing: border-box; margin-bottom: 10px; }
     .mic-btn { width: 100px; height: 100px; background: #4CAF50; border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center; font-size: 40px; color: white; cursor: pointer; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-    #chat-box { height: 180px; border: 2px dashed #add8e6; border-radius: 10px; overflow-y: auto; margin-bottom: 10px; padding: 10px; text-align: left; background: #fffaf0; font-size: 14px; }
-    .branding { font-size: 13px; color: #888; margin-top: 15px; }
+    #chat-box { height: 220px; border: 2px dashed #add8e6; border-radius: 10px; overflow-y: auto; margin-bottom: 10px; padding: 10px; text-align: left; background: #fffaf0; font-size: 14px; }
+    
+    /* Prominent Branding Style */
+    .branding { font-size: 18px; font-weight: bold; color: #2c3e50; margin-top: 20px; letter-spacing: 0.5px; border-top: 2px solid #eee; padding-top: 12px; }
+    
     #status { font-weight: bold; color: #4CAF50; margin: 10px 0; font-size: 15px; }
   </style>
 </head>
 <body>
 
 <div class="card">
-  <h2>🌟 Language Pal 🌟</h2>
-  <p style="font-size: 14px; color: #555; margin-top: -10px;">by Raj</p>
+  <h2>🌍 Language Pal 🌍</h2>
   
   <div id="setup-screen">
     <p style="font-size: 14px;">Enter your email and paste your free Google API key:</p>
-    <input type="email" id="parentEmail" placeholder="Parent's Email">
+    <input type="email" id="parentEmail" placeholder="Your Email">
     <a href="https://aistudio.google.com/app/apikey" target="_blank" class="link-btn">1. Get Free Key from Google</a>
     <input type="password" id="apiKeyInput" placeholder="Paste your API key here">
-    <button onclick="saveKey()">2. Launch Voice App!</button>
+    <button onclick="saveKey()">2. Launch Tutor App!</button>
   </div>
 
   <div id="app-screen" style="display:none;">
-    <div id="chat-box"><div><b>Tutor Pingo:</b> Tap the green button and speak clearly! 🌍</div></div>
+    <div id="chat-box"><div><b>Tutor:</b> Hello! What language would you like to practice today? Speak into the microphone.</div></div>
     <div id="status">Tap microphone to speak</div>
     <button class="mic-btn" onclick="startListening()">🎤</button>
   </div>
 
-  <div class="branding">Powered by Raj Thakkar</div>
+  <div class="branding">Created by Raj Thakkar</div>
 </div>
 
 <script>
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyTEVn6j5vqgsfWA2y4peYib5deA__cQLI2Z5KlXPeKwibwcJOz8vbLJYYkHbzcejU/exec";
+  const SCRIPT_URL = "YOUR_NEW_APPS_SCRIPT_WEB_APP_URL_HERE"; // Put your actual deployment script URL here
 
   function saveKey() {
     const key = document.getElementById('apiKeyInput').value.trim();
@@ -81,7 +83,7 @@
 
     recognition.onresult = async function(event) {
       const speechText = event.results[0][0].transcript;
-      document.getElementById('status').innerText = "Pingo is thinking...";
+      document.getElementById('status').innerText = "Tutor is thinking...";
       await sendToBackend(speechText);
     };
 
@@ -100,7 +102,7 @@
 
   async function sendToBackend(text) {
     const chatBox = document.getElementById('chat-box');
-    chatBox.innerHTML += `<div><b>Child:</b> ${text}</div>`;
+    chatBox.innerHTML += `<div><b>You:</b> ${text}</div>`;
     chatBox.scrollTop = chatBox.scrollHeight;
 
     try {
@@ -114,18 +116,26 @@
       });
 
       const data = await response.json();
-      const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Let's learn a fun new word!";
       
-      chatBox.innerHTML += `<div><b>Tutor Pingo:</b> ${reply}</div>`;
+      let reply = "Could not parse response.";
+      if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts) {
+        reply = data.candidates[0].content.parts[0].text;
+      } else if (data.error) {
+        reply = "API Error: " + (data.error.message || JSON.stringify(data.error));
+      } else {
+        reply = JSON.stringify(data);
+      }
+      
+      chatBox.innerHTML += `<div><b>Tutor:</b> ${reply}</div>`;
       chatBox.scrollTop = chatBox.scrollHeight;
       document.getElementById('status').innerText = "Tap microphone to speak";
       
       const speech = new SpeechSynthesisUtterance(reply);
-      speech.rate = 0.95; 
+      speech.rate = 1.0; 
       window.speechSynthesis.speak(speech);
 
     } catch (err) {
-      chatBox.innerHTML += `<div><b>System:</b> Connection failed. Check your network.</div>`;
+      chatBox.innerHTML += `<div><b>System:</b> Connection failed. Check network.</div>`;
       document.getElementById('status').innerText = "Tap microphone to speak";
     }
   }
