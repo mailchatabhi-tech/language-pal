@@ -51,13 +51,13 @@
 
 <script>
   let ws = null;
-  let inputAudioContext = null;
-  let outputAudioContext = null;
+  let audioContext = null;
   let mediaStream = null;
-  let processor = null;
-  let inputSource = null;
+  let scriptProcessor = null;
   let isConnected = false;
-  let nextPlayTime = 0;
+  let audioQueue = [];
+  let isPlaying = false;
+  let gainNode = null;
 
   function saveKey() {
     const key = document.getElementById('apiKeyInput').value.trim();
@@ -89,25 +89,19 @@
     document.getElementById('status').innerText = "Connecting...";
 
     try {
-      // 1. Initialize dedicated input context (16kHz for Gemini input requirement)
-      inputAudioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
-      // 2. Initialize dedicated output context (24kHz matching Gemini native output layout)
-      outputAudioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+      audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
 
-      if (inputAudioContext.state === 'suspended') await inputAudioContext.resume();
-      if (outputAudioContext.state === 'suspended') await outputAudioContext.resume();
+      gainNode = audioContext.createGain();
+      gainNode.gain.value = 2.5; 
+      gainNode.connect(audioContext.destination);
 
       mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        audio: { 
-          channelCount: 1, 
-          sampleRate: 16000, 
-          echoCancellation: true, 
-          noiseSuppression: true,
-          autoGainControl: true
-        } 
+        audio: { channelCount: 1, sampleRate: 16000, echoCancellation: true, noiseSuppression: true } 
       });
     } catch (err) {
-      console.error(err);
       document.getElementById('status').innerText = "Mic permission denied!";
       return;
     }
@@ -117,7 +111,6 @@
 
     ws.onopen = () => {
       isConnected = true;
-      nextPlayTime = 0;
       document.getElementById('orbBtn').classList.add('active');
       document.getElementById('status').innerText = "Anvaya Live Active. Speak freely.";
       
@@ -134,7 +127,7 @@
         }
       };
       ws.send(JSON.stringify(setupMessage));
-      startMicStream();
+      startAudioProcessing();
     };
 
     ws.onmessage = async (event) => {
@@ -151,7 +144,7 @@
               box.scrollTop = box.scrollHeight;
             }
             if (part.inlineData && part.inlineData.data) {
-              queueAndPlayAudio(part.inlineData.data);
+              enqueueAudio(part.inlineData.data);
             }
           }
         }
@@ -171,11 +164,11 @@
     };
   }
 
-  function startMicStream() {
-    inputSource = inputAudioContext.createMediaStreamSource(mediaStream);
-    processor = inputAudioContext.createScriptProcessor(2048, 1, 1);
+  function startAudioProcessing() {
+    const source = audioContext.createMediaStreamSource(mediaStream);
+    scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
 
-    processor.onaudioprocess = (e) => {
+    scriptProcessor.onaudioprocess = (e) => {
       if (!isConnected || !ws || ws.readyState !== WebSocket.OPEN) return;
       
       const inputData = e.inputBuffer.getChannelData(0);
@@ -193,13 +186,11 @@
       }));
     };
 
-    inputSource.connect(processor);
-    processor.connect(inputAudioContext.destination);
+    source.connect(scriptProcessor);
+    scriptProcessor.connect(audioContext.destination);
   }
 
-  function queueAndPlayAudio(base64Data) {
-    if (!outputAudioContext) return;
-
+  function enqueueAudio(base64Data) {
     const binary = atob(base64Data);
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) { bytes[i] = binary.charCodeAt(i); }
@@ -208,37 +199,37 @@
     const float32 = new Float32Array(pcm16.length);
     for (let i = 0; i < pcm16.length; i++) { float32[i] = pcm16[i] / 32768.0; }
 
-    const audioBuffer = outputAudioContext.createBuffer(1, float32.length, 24000);
-    audioBuffer.getChannelData(0).set(float32);
+    audioQueue.push(float32);
+    if (!isPlaying) { playQueue(); }
+  }
 
-    const source = outputAudioContext.createBufferSource();
-    source.buffer = audioBuffer;
-    
-    // Gain Node for clean volume multiplication (boosts clarity x2)
-    const gainNode = outputAudioContext.createGain();
-    gainNode.gain.value = 2.2;
-    source.connect(gainNode);
-    gainNode.connect(outputAudioContext.destination);
-
-    const currentTime = outputAudioContext.currentTime;
-    if (nextPlayTime < currentTime) {
-      nextPlayTime = currentTime;
+  function playQueue() {
+    if (audioQueue.length === 0) {
+      isPlaying = false;
+      return;
     }
-    
-    source.start(nextPlayTime);
-    nextPlayTime += audioBuffer.duration;
+    isPlaying = true;
+    const float32 = audioQueue.shift();
+
+    const buffer = audioContext.createBuffer(1, float32.length, 24000);
+    buffer.getChannelData(0).set(float32);
+
+    const source = audioContext.createBufferSource();
+    source.buffer = buffer;
+    source.connect(gainNode);
+    source.onended = () => playQueue();
+    source.start();
   }
 
   function stopLiveSession() {
     isConnected = false;
-    nextPlayTime = 0;
+    isPlaying = false;
+    audioQueue = [];
 
-    if (processor) { processor.disconnect(); processor = null; }
-    if (inputSource) { inputSource.disconnect(); inputSource = null; }
+    if (scriptProcessor) { scriptProcessor.disconnect(); scriptProcessor = null; }
     if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
     if (ws) { ws.close(); ws = null; }
-    if (inputAudioContext && inputAudioContext.state !== 'closed') { inputAudioContext.close(); inputAudioContext = null; }
-    if (outputAudioContext && outputAudioContext.state !== 'closed') { outputAudioContext.close(); outputAudioContext = null; }
+    if (audioContext && audioContext.state !== 'closed') { audioContext.close(); audioContext = null; }
 
     const orb = document.getElementById('orbBtn');
     if (orb) orb.classList.remove('active');
