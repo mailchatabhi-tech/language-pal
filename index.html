@@ -7,9 +7,8 @@
   <style>
     body { background: #064e3b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; padding: 20px; color: #ecfdf5; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; box-sizing: border-box; }
     .card { background: #065f46; padding: 30px; border-radius: 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); width: 100%; max-width: 420px; border: 1px solid #047857; }
-    input, select { padding: 14px; font-size: 15px; border-radius: 14px; border: 1px solid #047857; margin: 10px 0; width: 100%; box-sizing: border-box; background: #047857; color: #ffffff; outline: none; }
-    input:focus, select:focus { border-color: #34d399; }
-    select option { background: #065f46; color: #ffffff; }
+    input { padding: 14px; font-size: 15px; border-radius: 14px; border: 1px solid #047857; margin: 10px 0; width: 100%; box-sizing: border-box; background: #047857; color: #ffffff; outline: none; }
+    input:focus { border-color: #34d399; }
     button { padding: 14px; font-size: 16px; border-radius: 14px; border: none; cursor: pointer; font-weight: 600; width: 100%; margin: 10px 0; background: #10b981; color: white; transition: background 0.2s; }
     button:hover { background: #059669; }
     .link-btn { background: #047857; text-decoration: none; display: inline-block; color: #a7f3d0; border-radius: 14px; padding: 12px; font-weight: 500; font-size: 14px; width: 100%; box-sizing: border-box; margin-bottom: 10px; border: 1px solid #059669; }
@@ -66,6 +65,15 @@
   let isConnected = false;
   let nextPlayTime = 0;
 
+  // List of models as automatic fallbacks from best/newest to stable options
+  const fallbackModels = [
+    "models/gemini-2.0-flash-exp",
+    "models/gemini-2.0-flash",
+    "models/gemini-1.5-flash",
+    "models/gemini-1.5-pro"
+  ];
+  let currentModelIndex = 0;
+
   function encryptKey(plainText) {
     return btoa(encodeURIComponent(plainText));
   }
@@ -83,6 +91,7 @@
     if(!rawKey) { alert("Please paste your API key!"); return; }
     
     localStorage.setItem('anvaya_enc_key', encryptKey(rawKey));
+    currentModelIndex = 0; // Reset fallback list index on new key
     document.getElementById('setup-screen').style.display = 'none';
     document.getElementById('app-screen').style.display = 'block';
   }
@@ -106,11 +115,19 @@
     if (isConnected) {
       stopLiveSession();
     } else {
-      await startLiveSession();
+      currentModelIndex = 0; // Start trying from the primary model
+      await tryConnectWithFallback();
     }
   }
 
-  async function startLiveSession() {
+  async function tryConnectWithFallback() {
+    if (currentModelIndex >= fallbackModels.length) {
+      document.getElementById('status').innerText = "All model fallbacks failed. Check API key permissions.";
+      stopLiveSession();
+      return;
+    }
+
+    const modelToTry = fallbackModels[currentModelIndex];
     const storedEncKey = localStorage.getItem('anvaya_enc_key');
     const apiKey = storedEncKey ? decryptKey(storedEncKey) : '';
     
@@ -119,17 +136,21 @@
       return;
     }
 
-    document.getElementById('status').innerText = "Connecting...";
+    document.getElementById('status').innerText = `Connecting (${modelToTry.replace('models/', '')})...`;
 
     try {
-      audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+      if (!audioContext || audioContext.state === 'closed') {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+      }
       if (audioContext.state === 'suspended') {
         await audioContext.resume();
       }
 
-      mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        audio: { channelCount: 1, sampleRate: 16000, echoCancellation: true, noiseSuppression: true } 
-      });
+      if (!mediaStream) {
+        mediaStream = await navigator.mediaDevices.getUserMedia({ 
+          audio: { channelCount: 1, sampleRate: 16000, echoCancellation: true, noiseSuppression: true } 
+        });
+      }
     } catch (err) {
       document.getElementById('status').innerText = "Microphone access blocked!";
       console.error(err);
@@ -140,10 +161,9 @@
     ws = new WebSocket(url);
 
     ws.onopen = () => {
-      // Step 1: Send setup configuration immediately on open, do NOT start mic yet
       const setupMessage = {
         setup: {
-          model: "models/gemini-2.0-flash-exp",
+          model: modelToTry,
           generationConfig: {
             responseModalities: ["AUDIO"],
             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } } }
@@ -161,12 +181,11 @@
         const text = event.data instanceof Blob ? await event.data.text() : event.data;
         const response = JSON.parse(text);
         
-        // Step 2: Once the server acknowledges setup, start streaming microphone safely
         if (response.setupComplete) {
           isConnected = true;
           nextPlayTime = 0;
           document.getElementById('orbBtn').classList.add('active');
-          document.getElementById('status').innerText = "Connected! Speak now.";
+          document.getElementById('status').innerText = `Connected (${modelToTry.replace('models/', '')}). Speak now.`;
           startStreamingMic();
           return;
         }
@@ -191,18 +210,24 @@
 
     ws.onerror = (err) => {
       console.error("WebSocket error:", err);
-      document.getElementById('status').innerText = "Connection error.";
-      stopLiveSession();
     };
 
     ws.onclose = (event) => {
-      console.warn("WebSocket closed code:", event.code);
-      if (event.code === 1008) {
-        document.getElementById('status').innerText = "Error 1008: Check if your API key has access or generate a fresh key.";
+      // If code is 1008 or connection dropped before success, trigger next fallback model automatically
+      if (!isConnected && event.code === 1008) {
+        console.warn(`Model ${modelToTry} rejected with 1008. Trying fallback...`);
+        if (ws) { ws.close(); ws = null; }
+        currentModelIndex++;
+        setTimeout(tryConnectWithFallback, 300); // Quick seamless shift to next model
+      } else if (!isConnected) {
+        if (ws) { ws.close(); ws = null; }
+        currentModelIndex++;
+        setTimeout(tryConnectWithFallback, 300);
       } else {
+        console.warn("WebSocket closed code:", event.code);
         document.getElementById('status').innerText = event.code === 1000 ? "Ready" : `Disconnected (${event.code})`;
+        stopLiveSession();
       }
-      stopLiveSession();
     };
   }
 
@@ -285,7 +310,9 @@
     const orb = document.getElementById('orbBtn');
     if (orb) orb.classList.remove('active');
     const status = document.getElementById('status');
-    if (status && status.innerText.includes("Connected")) status.innerText = "Ready";
+    if (status && (status.innerText.includes("Connected") || status.innerText.includes("Connecting"))) {
+      status.innerText = "Ready";
+    }
   }
 </script>
 
