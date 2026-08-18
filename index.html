@@ -24,7 +24,6 @@
 
     #chat-box { height: 210px; border: 1px solid #047857; border-radius: 14px; overflow-y: auto; margin-bottom: 12px; padding: 12px; text-align: left; background: #022c22; font-size: 14px; color: #a7f3d0; }
     
-    /* Prominent Branding Block */
     .branding-top { font-size: 18px; font-weight: 700; color: #34d399; margin-bottom: 15px; letter-spacing: 1px; text-transform: uppercase; }
     .branding-bottom { font-size: 15px; font-weight: 700; color: #34d399; margin-top: 20px; letter-spacing: 1px; border-top: 2px solid #047857; padding-top: 15px; text-transform: uppercase; text-shadow: 0 0 15px rgba(52, 211, 153, 0.4); }
     
@@ -37,7 +36,7 @@
   <div class="branding-top">Anvaya by Raj Thakkar</div>
   
   <div id="setup-screen">
-    <p style="font-size: 14px; color: #a7f3d0;">Enter your Google API key to open direct Gemini Live WebSocket connection:</p>
+    <p style="font-size: 14px; color: #a7f3d0;">Enter your Google API key to open direct Gemini Live WebSocket stream:</p>
     <a href="https://aistudio.google.com/app/apikey" target="_blank" class="link-btn">1. Get Free Key from Google</a>
     <input type="password" id="apiKeyInput" placeholder="Paste your API key here">
     <button onclick="saveKey()">2. Launch Live Stream</button>
@@ -102,7 +101,7 @@
       
       const setupMessage = {
         setup: {
-          model: "models/gemini-2.5-flash",
+          model: "models/gemini-3.1-flash-live-preview",
           generationConfig: {
             responseModalities: ["AUDIO"],
             speechConfig: {
@@ -127,8 +126,9 @@
       }
     };
 
-    ws.onerror = () => {
-      document.getElementById('status').innerText = "Connection error. Retrying...";
+    ws.onerror = (err) => {
+      console.error("WebSocket error:", err);
+      document.getElementById('status').innerText = "Connection error. Check console.";
       stopLiveSession();
     };
 
@@ -139,33 +139,49 @@
 
   async function startMicrophoneStream() {
     try {
-      audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
       mediaStream = await navigator.mediaDevices.getUserMedia({ 
         audio: { 
           channelCount: 1, 
-          sampleRate: 16000,
           echoCancellation: true,
-          noiseSuppression: true 
+          noiseSuppression: true,
+          autoGainControl: true
         } 
       });
       
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
       const source = audioContext.createMediaStreamSource(mediaStream);
       processor = audioContext.createScriptProcessor(4096, 1, 1);
 
       processor.onaudioprocess = (e) => {
         if (!isConnected || !ws || ws.readyState !== WebSocket.OPEN) return;
-        const inputData = e.inputBuffer.getChannelData(0);
         
-        // Convert audio to 16kHz PCM format chunk
-        const pcm16 = new Int16Array(inputData.length);
-        for (let i = 0; i < inputData.length; i++) {
-          pcm16[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7FFF;
+        const inputData = e.inputBuffer.getChannelData(0);
+        const inputSampleRate = audioContext.sampleRate;
+        const targetSampleRate = 16000;
+        
+        // Simple downsampling to 16kHz to guarantee proper transmission
+        let downsampledData = inputData;
+        if (inputSampleRate !== targetSampleRate) {
+          const ratio = inputSampleRate / targetSampleRate;
+          const newLength = Math.round(inputData.length / ratio);
+          downsampledData = new Float32Array(newLength);
+          for (let i = 0; i < newLength; i++) {
+            downsampledData[i] = inputData[Math.floor(i * ratio)];
+          }
+        }
+
+        // Convert Float32Array to 16-bit PCM little-endian
+        const pcm16 = new Int16Array(downsampledData.length);
+        for (let i = 0; i < downsampledData.length; i++) {
+          let s = Math.max(-1, Math.min(1, downsampledData[i]));
+          pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
         }
         
         const base64Audio = btoa(String.fromCharCode.apply(null, new Uint8Array(pcm16.buffer)));
+        
         ws.send(JSON.stringify({
           realtimeInput: {
-            mediaChunks: [{ mimeType: "audio/pcm", data: base64Audio }]
+            mediaChunks: [{ mimeType: "audio/pcm;rate=16000", data: base64Audio }]
           }
         }));
       };
@@ -173,7 +189,8 @@
       source.connect(processor);
       processor.connect(audioContext.destination);
     } catch (err) {
-      document.getElementById('status').innerText = "Microphone access denied or unavailable.";
+      console.error("Mic error:", err);
+      document.getElementById('status').innerText = "Microphone error. Check permissions.";
       stopLiveSession();
     }
   }
