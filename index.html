@@ -7,14 +7,15 @@
   <style>
     body { background: #064e3b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; padding: 20px; color: #ecfdf5; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; box-sizing: border-box; }
     .card { background: #065f46; padding: 30px; border-radius: 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); width: 100%; max-width: 420px; border: 1px solid #047857; }
-    input { padding: 14px; font-size: 15px; border-radius: 14px; border: 1px solid #047857; margin: 10px 0; width: 100%; box-sizing: border-box; background: #047857; color: #ffffff; outline: none; }
-    input:focus { border-color: #34d399; }
+    input, select { padding: 14px; font-size: 15px; border-radius: 14px; border: 1px solid #047857; margin: 10px 0; width: 100%; box-sizing: border-box; background: #047857; color: #ffffff; outline: none; }
+    input:focus, select:focus { border-color: #34d399; }
+    select option { background: #065f46; color: #ffffff; }
     button { padding: 14px; font-size: 16px; border-radius: 14px; border: none; cursor: pointer; font-weight: 600; width: 100%; margin: 10px 0; background: #10b981; color: white; transition: background 0.2s; }
     button:hover { background: #059669; }
     .link-btn { background: #047857; text-decoration: none; display: inline-block; color: #a7f3d0; border-radius: 14px; padding: 12px; font-weight: 500; font-size: 14px; width: 100%; box-sizing: border-box; margin-bottom: 10px; border: 1px solid #059669; }
     .link-btn:hover { color: #ffffff; background: #059669; }
 
-    .live-orb { width: 120px; height: 120px; background: radial-gradient(circle, #34d399 0%, #10b981 50%, #059669 100%); border-radius: 50%; margin: 30px auto; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; box-shadow: 0 0 40px rgba(52, 211, 153, 0.5); transition: transform 0.2s; position: relative; }
+    .live-orb { width: 120px; height: 120px; background: radial-gradient(circle, #34d399 0%, #10b981 50%, #059669 100%); border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; box-shadow: 0 0 40px rgba(52, 211, 153, 0.5); transition: transform 0.2s; position: relative; }
     .live-orb::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; background: linear-gradient(45deg, #6ee7b7, #34d399, #10b981, #059669); z-index: -1; filter: blur(8px); opacity: 0.8; }
     .live-orb.active { animation: geminiPulse 2s infinite ease-in-out; }
     @keyframes geminiPulse {
@@ -23,10 +24,10 @@
       100% { transform: scale(1); box-shadow: 0 0 30px rgba(52, 211, 153, 0.6); }
     }
 
-    #chat-box { height: 180px; border: 1px solid #047857; border-radius: 16px; overflow-y: auto; margin-bottom: 15px; padding: 14px; text-align: left; background: #022c22; font-size: 13px; color: #a7f3d0; }
-    .branding-top { font-size: 13px; font-weight: 600; color: #a7f3d0; margin-bottom: 20px; letter-spacing: 2px; text-transform: uppercase; }
-    .branding-bottom { font-size: 12px; font-weight: 600; color: #6ee7b7; margin-top: 25px; letter-spacing: 2px; border-top: 1px solid #047857; padding-top: 15px; text-transform: uppercase; }
-    #status { font-weight: 500; color: #a7f3d0; margin: 12px 0; font-size: 14px; }
+    #chat-box { height: 140px; border: 1px solid #047857; border-radius: 16px; overflow-y: auto; margin-bottom: 15px; padding: 14px; text-align: left; background: #022c22; font-size: 13px; color: #a7f3d0; }
+    .branding-top { font-size: 13px; font-weight: 600; color: #a7f3d0; margin-bottom: 15px; letter-spacing: 2px; text-transform: uppercase; }
+    .branding-bottom { font-size: 12px; font-weight: 600; color: #6ee7b7; margin-top: 20px; letter-spacing: 2px; border-top: 1px solid #047857; padding-top: 15px; text-transform: uppercase; }
+    #status { font-weight: 500; color: #a7f3d0; margin: 10px 0; font-size: 14px; }
   </style>
 </head>
 <body>
@@ -35,9 +36,18 @@
   <div class="branding-top">Anvaya by Raj Thakkar</div>
   
   <div id="setup-screen">
-    <p style="font-size: 13px; color: #a7f3d0; margin-bottom: 15px;">Paste your Google AI Studio API Key:</p>
+    <p style="font-size: 13px; color: #a7f3d0; margin-bottom: 12px;">Paste your Google AI Studio API Key:</p>
     <a href="https://aistudio.google.com/app/apikey" target="_blank" class="link-btn">Get Free API Key</a>
     <input type="password" id="apiKeyInput" placeholder="AIzaSy...">
+    
+    <label style="font-size: 12px; color: #a7f3d0; display: block; text-align: left; margin-top: 5px;">Select Gemini Live Model:</label>
+    <select id="modelSelect">
+      <option value="models/gemini-2.5-flash">Gemini 2.5 Flash</option>
+      <option value="models/gemini-2.0-flash-exp">Gemini 2.0 Flash Exp</option>
+      <option value="models/gemini-2.0-flash">Gemini 2.0 Flash</option>
+      <option value="models/gemini-2.5-pro">Gemini 2.5 Pro</option>
+    </select>
+
     <button onclick="saveKey()">Start Live Session</button>
   </div>
 
@@ -65,8 +75,10 @@
 
   function saveKey() {
     const key = document.getElementById('apiKeyInput').value.trim();
+    const model = document.getElementById('modelSelect').value;
     if(!key) { alert("Please paste your API key!"); return; }
     localStorage.setItem('anvaya_key', key);
+    localStorage.setItem('anvaya_model', model);
     document.getElementById('setup-screen').style.display = 'none';
     document.getElementById('app-screen').style.display = 'block';
   }
@@ -75,6 +87,9 @@
     if(localStorage.getItem('anvaya_key')) {
       document.getElementById('setup-screen').style.display = 'none';
       document.getElementById('app-screen').style.display = 'block';
+      if(localStorage.getItem('anvaya_model')) {
+        document.getElementById('modelSelect').value = localStorage.getItem('anvaya_model');
+      }
     }
   }
 
@@ -88,6 +103,7 @@
 
   async function startLiveSession() {
     const apiKey = localStorage.getItem('anvaya_key');
+    const selectedModel = localStorage.getItem('anvaya_model') || document.getElementById('modelSelect').value;
     if (!apiKey) return;
 
     document.getElementById('status').innerText = "Connecting...";
@@ -124,7 +140,7 @@
       
       const setupMessage = {
         setup: {
-          model: "models/gemini-2.0-flash-exp",
+          model: selectedModel,
           generationConfig: {
             responseModalities: ["AUDIO"],
             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } } }
@@ -167,7 +183,9 @@
       stopLiveSession();
     };
 
-    ws.onclose = () => {
+    ws.onclose = (event) => {
+      console.warn("WebSocket closed:", event);
+      document.getElementById('status').innerText = event.code === 1000 ? "Ready" : "Connection closed by server.";
       stopLiveSession();
     };
   }
@@ -251,7 +269,7 @@
     const orb = document.getElementById('orbBtn');
     if (orb) orb.classList.remove('active');
     const status = document.getElementById('status');
-    if (status) status.innerText = "Ready";
+    if (status && status.innerText.includes("active")) status.innerText = "Ready";
   }
 </script>
 
